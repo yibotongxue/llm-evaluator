@@ -24,25 +24,21 @@ def main() -> None:
     inference = get_api_llm_inference(cfgs["model_cfgs"], cfgs["inference_cfgs"])
 
     inference_input = [
-        InferenceInput(
+        InferenceInput.from_prompts(
             prompt="中国的首都是哪里？",
             system_prompt="你是一个人工智能助手",
-            meta_data={},
         ),
-        InferenceInput(
+        InferenceInput.from_prompts(
             prompt="Where is the capital of China?",
             system_prompt="You are an AI assistant",
-            meta_data={},
         ),
-        InferenceInput(
+        InferenceInput.from_prompts(
             prompt="中国有多少个省份？分别是哪些？",
             system_prompt="你是一个人工智能助手",
-            meta_data={},
         ),
-        InferenceInput(
+        InferenceInput.from_prompts(
             prompt="How many provinces are there in China? What are they?",
             system_prompt="You are an AI assistant",
-            meta_data={},
         ),
     ]
 

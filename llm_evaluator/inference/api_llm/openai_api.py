@@ -4,6 +4,7 @@ from typing import Any
 import openai
 from llm_evaluator.utils.logger import Logger
 from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
+from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
 from .base import BaseApiLLMInference
 
@@ -33,14 +34,25 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
         self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
 
     def _single_generate(self, inference_input: InferenceInput) -> InferenctOutput:
+        messages: list[ChatCompletionMessageParam] = []
+        messages.append(
+            {
+                "role": "system",
+                "content": inference_input.system_prompt,
+            }
+        )
+        for turn in inference_input.conversation:
+            messages.append(
+                {
+                    "role": turn["role"],
+                    "content": turn["content"],
+                }
+            )
         for i in range(self.max_retry):
             try:
                 response = self.client.chat.completions.create(
                     model=self.model_name,
-                    messages=[
-                        {"role": "system", "content": inference_input.system_prompt},
-                        {"role": "user", "content": inference_input.prompt},
-                    ],
+                    messages=messages,
                     stream=False,
                     **self.inference_cfgs,
                 )

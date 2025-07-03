@@ -1,14 +1,31 @@
+from __future__ import annotations
+
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
 
 
 class InferenceInput(BaseModel):  # type: ignore [misc]
-    prompt: str
+    conversation: list[dict[str, Any]]
     system_prompt: str
     meta_data: dict[str, Any]
 
     model_config = ConfigDict(extra="allow")
+
+    @classmethod
+    def from_prompts(
+        cls: type[InferenceInput], prompt: str, system_prompt: str = ""
+    ) -> InferenceInput:
+        return cls(
+            conversation=[
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            system_prompt=system_prompt,
+            meta_data={},
+        )
 
 
 class InferenctOutput(BaseModel):  # type: ignore [misc]

@@ -3,6 +3,7 @@ from typing import Any
 
 from google import genai
 from google.genai import types
+from google.genai.types import ContentDict
 from llm_evaluator.utils.logger import Logger
 from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
 
@@ -27,6 +28,11 @@ class GeminiApiLLMInference(BaseApiLLMInference):
 
     def _single_generate(self, inference_input: InferenceInput) -> InferenctOutput:
         for i in range(self.max_retry):
+            contents: list[ContentDict] = []
+            for turn in inference_input.conversation:
+                contents.append(
+                    {"role": turn["role"], "parts": [{"text": turn["content"]}]}
+                )
             try:
                 response = self.client.models.generate_content(
                     model=self.model_name,
@@ -34,7 +40,7 @@ class GeminiApiLLMInference(BaseApiLLMInference):
                         system_instruction=inference_input.system_prompt,
                         **self.inference_cfgs,
                     ),
-                    contents=[inference_input.prompt],
+                    contents=contents,
                 )
             except Exception as err:
                 _logger.error(
