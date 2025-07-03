@@ -5,7 +5,6 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "dotenv>=0.9.9",
     "google-genai>=1.24.0",
     "numpy>=2.3.1",
     "openai>=1.93.0",
@@ -43,6 +42,7 @@ packages = ["llm_evaluator"]
 [dependency-groups]
 dev = [
     "bandit>=1.8.5",
+    "dotenv>=0.9.9",
     "ipykernel>=6.29.5",
     "mypy>=1.16.1",
     "pre-commit>=4.2.0",

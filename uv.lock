@@ -519,7 +519,6 @@ name = "llm-evaluator"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "dotenv" },
     { name = "google-genai" },
     { name = "numpy" },
     { name = "openai" },
@@ -533,6 +532,7 @@ dependencies = [
 [package.dev-dependencies]
 dev = [
     { name = "bandit" },
+    { name = "dotenv" },
     { name = "ipykernel" },
     { name = "mypy" },
     { name = "pre-commit" },
@@ -541,7 +541,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "dotenv", specifier = ">=0.9.9" },
     { name = "google-genai", specifier = ">=1.24.0" },
     { name = "numpy", specifier = ">=2.3.1" },
     { name = "openai", specifier = ">=1.93.0" },
@@ -555,6 +554,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "bandit", specifier = ">=1.8.5" },
+    { name = "dotenv", specifier = ">=0.9.9" },
     { name = "ipykernel", specifier = ">=6.29.5" },
     { name = "mypy", specifier = ">=1.16.1" },
     { name = "pre-commit", specifier = ">=4.2.0" },
