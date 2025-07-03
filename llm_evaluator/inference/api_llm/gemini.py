@@ -1,0 +1,49 @@
+import os
+from typing import Any
+
+from google import genai
+from google.genai import types
+from llm_evaluator.utils.logger import Logger
+from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
+
+from .base import BaseApiLLMInference
+
+__all__ = [
+    "GeminiApiLLMInference",
+]
+
+
+_logger = Logger(__name__)
+
+
+class GeminiApiLLMInference(BaseApiLLMInference):
+    def __init__(
+        self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
+    ) -> None:
+        super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
+        self.model_name = self.model_cfgs["model_name_or_path"]
+        api_key = os.environ.get(self.model_cfgs.get("api_key_name", "GOOGLE_API_KEY"))
+        self.client = genai.Client(api_key=api_key)
+
+    def _single_generate(self, inference_input: InferenceInput) -> InferenctOutput:
+        for i in range(self.max_retry):
+            try:
+                response = self.client.models.generate_content(
+                    model=self.model_name,
+                    config=types.GenerateContentConfig(
+                        system_instruction=inference_input.system_prompt,
+                        **self.inference_cfgs,
+                    ),
+                    contents=[inference_input.prompt],
+                )
+            except Exception as err:
+                _logger.error(
+                    msg=f"第{i}次呼叫{self.model_name} API失败，错误信息为{err}"
+                )
+                continue
+            return InferenctOutput(
+                response=response.text,
+                meta_data=response.model_dump(),
+            )
+        _logger.error(msg=f"所有对{self.model_name} API的呼叫均以失败，返回默认信息")
+        return InferenctOutput(response="", meta_data={})

@@ -5,7 +5,12 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "dotenv>=0.9.9",
+    "google-genai>=1.24.0",
     "numpy>=2.3.1",
+    "openai>=1.93.0",
+    "pydantic>=2.11.7",
+    "pyyaml>=6.0.2",
     "scikit-learn>=1.7.0",
     "torch>=2.7.1",
     "transformers>=4.53.0",
@@ -31,6 +36,9 @@ disable_error_code = []
 [build-system]
 requires = ["setuptools>=61.0", "wheel"] # 构建 PyPI 包所需的依赖
 build-backend = "setuptools.build_meta" # 指定构建后端，这里使用 setuptools
+
+[tool.setuptools]
+packages = ["llm_evaluator"]
 
 [dependency-groups]
 dev = [
