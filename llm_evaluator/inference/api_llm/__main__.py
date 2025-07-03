@@ -34,12 +34,22 @@ def main() -> None:
             system_prompt="You are an AI assistant",
             meta_data={},
         ),
+        InferenceInput(
+            prompt="中国有多少个省份？分别是哪些？",
+            system_prompt="你是一个人工智能助手",
+            meta_data={},
+        ),
+        InferenceInput(
+            prompt="How many provinces are there in China? What are they?",
+            system_prompt="You are an AI assistant",
+            meta_data={},
+        ),
     ]
 
-    inference_output = inference.generate(inference_input)
+    outputs = inference.generate(inference_input)
 
-    print(inference_output[0].response)
-    print(inference_output[1].response)
+    for inference_output in outputs:
+        print(inference_output.response)
 
 
 main()

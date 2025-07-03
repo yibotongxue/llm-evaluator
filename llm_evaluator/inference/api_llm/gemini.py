@@ -43,7 +43,14 @@ class GeminiApiLLMInference(BaseApiLLMInference):
                 continue
             return InferenctOutput(
                 response=response.text,
+                input=inference_input.model_dump(),
+                engine="api",
                 meta_data=response.model_dump(),
             )
         _logger.error(msg=f"所有对{self.model_name} API的呼叫均以失败，返回默认信息")
-        return InferenctOutput(response="", meta_data={})
+        return InferenctOutput(
+            response="",
+            input=inference_input.model_dump(),
+            engine="api",
+            meta_data={},
+        )
