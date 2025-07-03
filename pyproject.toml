@@ -1,0 +1,45 @@
+[project]
+name = "llm-evaluator"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "numpy>=2.3.1",
+    "scikit-learn>=1.7.0",
+    "torch>=2.7.1",
+    "transformers>=4.53.0",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py313']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+src_paths = ["safety_evaluater", "tests"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+python_version = "3.13"
+show_error_codes = true
+disable_error_code = []
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"] # 构建 PyPI 包所需的依赖
+build-backend = "setuptools.build_meta" # 指定构建后端，这里使用 setuptools
+
+[dependency-groups]
+dev = [
+    "bandit>=1.8.5",
+    "ipykernel>=6.29.5",
+    "mypy>=1.16.1",
+    "pre-commit>=4.2.0",
+    "pytest>=8.4.1",
+]
+
+[tool.uv]
+index-url = "https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple"
