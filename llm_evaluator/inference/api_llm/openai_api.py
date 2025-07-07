@@ -18,10 +18,13 @@ _logger = Logger(__name__)
 
 class OpenAIApiLLMInference(BaseApiLLMInference):
     _DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
+    _QWEN_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
 
     _BASE_URL_MAP: dict[str, str] = {
         "deepseek-chat": _DEEPSEEK_BASE_URL,
         "deepseek_reasoner": _DEEPSEEK_BASE_URL,
+        "qwen-max": _QWEN_BASE_URL,
+        "qwen-plus": _QWEN_BASE_URL,
     }
 
     def __init__(
@@ -58,7 +61,7 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
                 )
             except Exception as err:
                 _logger.error(
-                    msg=f"第{i}次呼叫{self.model_name} API失败，错误信息为{err}"
+                    msg=f"第{i+1}次呼叫{self.model_name} API失败，错误信息为{err}"
                 )
                 continue
             content = response.choices[0].message.content

@@ -44,7 +44,7 @@ class GeminiApiLLMInference(BaseApiLLMInference):
                 )
             except Exception as err:
                 _logger.error(
-                    msg=f"第{i}次呼叫{self.model_name} API失败，错误信息为{err}"
+                    msg=f"第{i+1}次呼叫{self.model_name} API失败，错误信息为{err}"
                 )
                 continue
             return InferenctOutput(

@@ -1,7 +1,6 @@
 from typing import Any
 
 from accelerate import Accelerator
-from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -9,7 +8,15 @@ from transformers import (
     PreTrainedTokenizerBase,
 )
 
+from ..utils.logger import Logger
+from ..utils.type_utils import InferenceInput, InferenctOutput
 from .base import BaseInference
+
+__all__ = [
+    "HuggingFaceInference",
+]
+
+_logger = Logger(__name__)
 
 
 class HuggingFaceInference(BaseInference):
@@ -18,12 +25,16 @@ class HuggingFaceInference(BaseInference):
     ) -> None:
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         model_name = self.model_cfgs["model_name_or_path"]
+        _logger.info(f"预备加载模型{model_name}")
         model = AutoModelForCausalLM.from_pretrained(model_name)
+        _logger.info(f"模型{model_name}已加载")
         self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             model_name
         )
+        _logger.info(f"分词器{model_name}已加载")
         self.accelerator = Accelerator()
         self.model: PreTrainedModel = self.accelerator.prepare(model)
+        _logger.info(f"使用加速设备{self.accelerator.device}")
         self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def generate(self, inputs: list[InferenceInput]) -> list[InferenctOutput]:
