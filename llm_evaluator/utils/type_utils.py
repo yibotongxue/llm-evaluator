@@ -29,6 +29,24 @@ class InferenceInput(BaseModel):  # type: ignore [misc]
             meta_data={},
         )
 
+    def with_system_prompt(self, system_prompt: str) -> InferenceInput:
+        raw = {
+            **self.model_dump(),
+            "system_prompt": system_prompt,
+        }
+        return InferenceInput(**raw)
+
+    def with_meta_data(self, meta_data: dict[str, Any]) -> InferenceInput:
+        new_meta_data = {
+            **self.meta_data,
+            **meta_data,
+        }
+        raw = {
+            **self.model_dump(),
+            "meta_data": new_meta_data,
+        }
+        return InferenceInput(**raw)
+
 
 class InferenctOutput(BaseModel):  # type: ignore [misc]
     response: str
