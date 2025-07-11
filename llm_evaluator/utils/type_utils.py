@@ -7,6 +7,7 @@ from pydantic import BaseModel, ConfigDict
 
 class InferenceInput(BaseModel):  # type: ignore [misc]
     conversation: list[dict[str, Any]]
+    prefilled: bool
     system_prompt: str
     meta_data: dict[str, Any]
 
@@ -23,6 +24,7 @@ class InferenceInput(BaseModel):  # type: ignore [misc]
                     "content": prompt,
                 }
             ],
+            prefilled=False,
             system_prompt=system_prompt,
             meta_data={},
         )

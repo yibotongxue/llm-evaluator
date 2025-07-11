@@ -20,6 +20,15 @@ class BaseApiLLMInference(BaseInference):
         return self._parallel_generate(inputs)
 
     def _parallel_generate(self, inputs: list[InferenceInput]) -> list[InferenctOutput]:
+        for inference_input in inputs:
+            if inference_input.prefilled:
+                # TODO 需要设计更好的预填充方案
+                last_messages = inference_input.conversation.pop(-1)
+                if not last_messages["role"] == "assistant":
+                    raise ValueError(
+                        f"使用预填充的时候，最后一轮对话必须是assistant，但当前是{last_messages["role"]}"
+                    )
+                inference_input.conversation[-1]["content"] += last_messages["content"]
         results: dict[int, InferenctOutput] = {}
         max_workers = min(len(inputs), 32)
 
