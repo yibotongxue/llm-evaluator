@@ -1,8 +1,6 @@
 from typing import Any
 
-from .api_llm import get_api_llm_inference
 from .base import BaseInference
-from .hf import HuggingFaceInference
 
 
 def get_inference(
@@ -10,10 +8,14 @@ def get_inference(
 ) -> BaseInference:
     backend = model_cfgs.get("inference_backend")
     if backend == "api":
+        from .api_llm import get_api_llm_inference
+
         return get_api_llm_inference(
             model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
         )
     elif backend == "hf":
+        from .hf import HuggingFaceInference
+
         return HuggingFaceInference(
             model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
         )
