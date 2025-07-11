@@ -2,9 +2,10 @@ from abc import abstractmethod
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
-from llm_evaluator.inference.base import BaseInference
-from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
 from tqdm import tqdm
+
+from ...utils.type_utils import InferenceInput, InferenctOutput
+from ..base import BaseInference
 
 
 class BaseApiLLMInference(BaseInference):

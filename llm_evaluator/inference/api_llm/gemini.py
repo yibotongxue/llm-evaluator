@@ -4,9 +4,9 @@ from typing import Any
 from google import genai
 from google.genai import types
 from google.genai.types import ContentDict
-from llm_evaluator.utils.logger import Logger
-from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
 
+from ...utils.logger import Logger
+from ...utils.type_utils import InferenceInput, InferenctOutput
 from .base import BaseApiLLMInference
 
 __all__ = [

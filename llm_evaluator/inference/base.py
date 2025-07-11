@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
+from ..utils.type_utils import InferenceInput, InferenctOutput
 
 
 class BaseInference(ABC):

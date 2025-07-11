@@ -1,6 +1,5 @@
-from llm_evaluator.utils.config import *
-from llm_evaluator.utils.type_utils import InferenceInput
-
+from ...utils.config import *
+from ...utils.type_utils import InferenceInput
 from .factory import get_api_llm_inference
 
 

@@ -2,10 +2,10 @@ import os
 from typing import Any
 
 import openai
-from llm_evaluator.utils.logger import Logger
-from llm_evaluator.utils.type_utils import InferenceInput, InferenctOutput
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
+from ...utils.logger import Logger
+from ...utils.type_utils import InferenceInput, InferenctOutput
 from .base import BaseApiLLMInference
 
 __all__ = [
