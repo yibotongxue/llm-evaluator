@@ -1,8 +1,11 @@
+import gc
 from typing import Any
 
+import torch
 from tqdm import tqdm
 from vllm import LLM, SamplingParams
 from vllm.outputs import RequestOutput
+from vllm.transformers_utils.tokenizer import AnyTokenizer
 
 from ..utils.logger import Logger
 from ..utils.type_utils import InferenceInput, InferenceOutput
@@ -17,13 +20,13 @@ class VllmInference(BaseInference):
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
         # 提取模型配置
-        model_name = model_cfgs["model_name_or_path"]
-        vllm_init_args = model_cfgs.get("vllm_init_args", {})
+        self.model_name = model_cfgs["model_name_or_path"]
+        self.vllm_init_args = model_cfgs.get("vllm_init_args", {})
 
-        self.logger.info(f"Initializing vLLM model: {model_name}")
-        self.llm = LLM(model=model_name, **vllm_init_args)
-        self.tokenizer = self.llm.get_tokenizer()
-        self.logger.info(f"vLLM model {model_name} loaded successfully")
+        self.logger.info(f"Initializing vLLM model: {self.model_name}")
+        self.llm: LLM | None = None
+        self.tokenizer: AnyTokenizer | None = None
+        self.logger.info(f"vLLM model {self.model_name} loaded successfully")
 
         # 推理配置
         self.inference_batch_size = inference_cfgs.get("inference_batch_size", 32)
@@ -34,24 +37,27 @@ class VllmInference(BaseInference):
 
     def _prepare_prompts(self, inputs: list[InferenceInput]) -> list[str]:
         """将输入转换为vLLM所需的提示格式"""
+        if self.llm is None:
+            self.llm = LLM(model=self.model_name, **self.vllm_init_args)
+            self.tokenizer = self.llm.get_tokenizer()
         prompts = []
         for input in inputs:
-            # 插入系统提示
-            conversation = input.conversation.copy()
-            conversation.insert(0, {"role": "system", "content": input.system_prompt})
 
-        for inference_input in inputs:
-            if inference_input.prefilled:
+            if input.prefilled:
                 # TODO 需要设计更好的预填充方案
-                last_messages = inference_input.conversation.pop(-1)
+                last_messages = input.conversation.pop(-1)
                 if not last_messages["role"] == "assistant":
                     raise ValueError(
                         f"使用预填充的时候，最后一轮对话必须是assistant，但当前是{last_messages["role"]}"
                     )
-                inference_input.conversation[-1]["content"] += last_messages["content"]
+                input.conversation[-1]["content"] += last_messages["content"]
+
+            # 插入系统提示
+            conversation = input.conversation.copy()
+            conversation.insert(0, {"role": "system", "content": input.system_prompt})
 
             # 应用聊天模板
-            prompt = self.tokenizer.apply_chat_template(
+            prompt = self.tokenizer.apply_chat_template(  # type: ignore [union-attr]
                 conversation=conversation, add_generation_prompt=True, tokenize=False
             )
             prompts.append(prompt)
@@ -63,6 +69,10 @@ class VllmInference(BaseInference):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
+        if self.llm is None:
+            self.llm = LLM(model=self.model_name, **self.vllm_init_args)
+            self.tokenizer = self.llm.get_tokenizer()
+
         results: list[InferenceOutput] = []
 
         # 准备所有提示
@@ -103,6 +113,13 @@ class VllmInference(BaseInference):
                 )
 
         return results
+
+    def shutdown(self) -> None:
+        self.logger.info(f"关闭模型{self.model_name}")
+        self.llm = None
+        self.tokenizer = None
+        gc.collect()
+        torch.cuda.empty_cache()
 
 
 def main() -> None:

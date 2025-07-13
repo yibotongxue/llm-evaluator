@@ -1,3 +1,4 @@
+import gc
 from typing import Any
 
 import torch
@@ -21,18 +22,14 @@ class HuggingFaceInference(BaseInference):
     ) -> None:
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
-        model_name = self.model_cfgs["model_name_or_path"]
-        self.logger.info(f"预备加载模型{model_name}")
-        model = AutoModelForCausalLM.from_pretrained(model_name)
-        self.logger.info(f"模型{model_name}已加载")
+        self.model_name = self.model_cfgs["model_name_or_path"]
+        self.model: PreTrainedModel | None = None
         self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-            model_name,
+            self.model_name,
             padding_side="left",
         )
-        self.logger.info(f"分词器{model_name}已加载")
-        self.accelerator = Accelerator()
-        self.model: PreTrainedModel = self.accelerator.prepare(model)
-        self.logger.info(f"使用加速设备{self.accelerator.device}")
+        self.logger.info(f"分词器{self.model_name}已加载")
+        self.accelerator: Accelerator | None = None
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.offset = model_cfgs.get("offset", 5)
         self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
@@ -43,6 +40,12 @@ class HuggingFaceInference(BaseInference):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
+        if self.model is None:
+            self.logger.info(f"预备加载模型{self.model_name}")
+            self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
+            self.accelerator = Accelerator()
+            self.model = self.accelerator.prepare(self.model)
+            self.logger.info(f"使用加速设备{self.accelerator.device}")
         result: list[InferenceOutput] = []
         input_batches = [
             inputs[i : i + self.inference_batch_size]
@@ -93,10 +96,10 @@ class HuggingFaceInference(BaseInference):
                     ]
                 )
         with torch.inference_mode():
-            outputs = self.model.generate(
-                input_ids=encoded_inputs["input_ids"].to(self.accelerator.device),
+            outputs = self.model.generate(  # type: ignore [union-attr]
+                input_ids=encoded_inputs["input_ids"].to(self.accelerator.device),  # type: ignore [union-attr]
                 attention_mask=encoded_inputs["attention_mask"].to(
-                    self.accelerator.device
+                    self.accelerator.device  # type: ignore [union-attr]
                 ),
                 num_return_sequences=1,
                 **generate_cfgs,
@@ -122,6 +125,13 @@ class HuggingFaceInference(BaseInference):
             for idx in range(len(batch))
         ]
         return inference_outptus
+
+    def shutdown(self) -> None:
+        self.model = None
+        self.accelerator = None
+        gc.collect()
+        torch.cuda.empty_cache()
+        self.logger.info(f"关闭模型{self.model_name}")
 
 
 def main() -> None:

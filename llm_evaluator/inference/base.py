@@ -19,3 +19,6 @@ class BaseInference(ABC):
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
         pass
+
+    def shutdown(self) -> None:
+        pass
