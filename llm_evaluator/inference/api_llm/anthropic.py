@@ -1,23 +1,18 @@
 import time
 from typing import Any
 
-import openai
-from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
+import anthropic
+from anthropic.types.message_param import MessageParam
 
 from ...utils.logger import Logger
 from ...utils.type_utils import InferenceInput, InferenceOutput
 from .base import BaseApiLLMInference
 
 
-class OpenAIApiLLMInference(BaseApiLLMInference):
-    _DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
-    _QWEN_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
+class AnthropicApiLLMInference(BaseApiLLMInference):
 
     _BASE_URL_MAP: dict[str, str] = {
-        "deepseek-chat": _DEEPSEEK_BASE_URL,
-        "deepseek_reasoner": _DEEPSEEK_BASE_URL,
-        "qwen-max": _QWEN_BASE_URL,
-        "qwen-plus": _QWEN_BASE_URL,
+        "kimi-k2-0711-preview": "https://api.moonshot.cn/anthropic",
     }
 
     def __init__(
@@ -28,10 +23,11 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
         self.model_name = self.model_cfgs["model_name_or_path"]
         api_key = self.model_cfgs.get("api_key")
         base_url = self._BASE_URL_MAP.get(self.model_name, None)
-        self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
+        self.client = anthropic.Anthropic(api_key=api_key, base_url=base_url)
+        self.max_tokens = self.inference_cfgs.pop("max_tokens", 1024)
 
     def _single_generate(self, inference_input: InferenceInput) -> InferenceOutput:
-        messages: list[ChatCompletionMessageParam] = []
+        messages: list[MessageParam] = []
         messages.append(
             {
                 "role": "system",
@@ -47,7 +43,8 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
             )
         for i in range(self.max_retry):
             try:
-                response = self.client.chat.completions.create(
+                response = self.client.messages.create(
+                    max_tokens=self.max_tokens,
                     model=self.model_name,
                     messages=messages,
                     stream=False,
@@ -59,7 +56,7 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
                 )
                 time.sleep(self.sleep_seconds)
                 continue
-            content = response.choices[0].message.content
+            content = response.content[0].text
             return InferenceOutput(
                 response=content,
                 input=inference_input.model_dump(),

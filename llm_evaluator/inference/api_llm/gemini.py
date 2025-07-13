@@ -1,4 +1,4 @@
-import os
+import time
 from typing import Any
 
 from google import genai
@@ -17,7 +17,7 @@ class GeminiApiLLMInference(BaseApiLLMInference):
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         self.model_name = self.model_cfgs["model_name_or_path"]
-        api_key = os.environ.get(self.model_cfgs.get("api_key_name", "GOOGLE_API_KEY"))
+        api_key = self.model_cfgs.get("api_key")
         self.client = genai.Client(api_key=api_key)
 
     def _single_generate(self, inference_input: InferenceInput) -> InferenceOutput:
@@ -40,6 +40,7 @@ class GeminiApiLLMInference(BaseApiLLMInference):
                 self.logger.error(
                     msg=f"第{i+1}次呼叫{self.model_name} API失败，错误信息为{err}"
                 )
+                time.sleep(self.sleep_seconds)
                 continue
             return InferenceOutput(
                 response=response.text,

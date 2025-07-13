@@ -14,6 +14,8 @@ class BaseApiLLMInference(BaseInference):
     ) -> None:
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.max_retry: int = self.inference_cfgs.pop("max_retry", 3)
+        self.max_workers: int = self.inference_cfgs.pop("max_workers", 32)
+        self.sleep_seconds: int = self.inference_cfgs.pop("sleep_seconds", 30)
 
     def generate(
         self,
@@ -41,7 +43,7 @@ class BaseApiLLMInference(BaseInference):
                     )
                 inference_input.conversation[-1]["content"] += last_messages["content"]
         results: dict[int, InferenceOutput] = {}
-        max_workers = min(len(inputs), 32)
+        max_workers = min(len(inputs), self.max_workers)
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             future_to_index = {
