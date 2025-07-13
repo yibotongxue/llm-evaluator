@@ -76,3 +76,25 @@ class InferenceOutput(BaseModel):  # type: ignore [misc]
     meta_data: dict[str, Any]
 
     model_config = ConfigDict(extra="allow")
+
+
+class EvaluateResult(BaseModel):  # type: ignore [misc]
+    metrics: dict[str, float]
+    benchmark_cfgs: BenchmarkConfigs
+    raw_output: list[InferenceOutput]
+
+
+class BenchmarkConfigs(BaseModel):  # type: ignore [misc]
+    data_name_or_path: str
+    data_template: str
+    task_list: list[str] | None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class EvalConfigs(BaseModel):  # type: ignore [misc]
+    benchmarks: dict[str, BenchmarkConfigs]
+    attack_cfgs: list[dict[str, Any]]
+    metrics_cfgs: list[dict[str, Any]]
+
+    model_config = ConfigDict(extra="allow")
