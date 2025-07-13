@@ -13,9 +13,6 @@ __all__ = [
 ]
 
 
-_logger = Logger(__name__)
-
-
 class OpenAIApiLLMInference(BaseApiLLMInference):
     _DEEPSEEK_BASE_URL: str = "https://api.deepseek.com"
     _QWEN_BASE_URL: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
@@ -31,6 +28,7 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
+        self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         self.model_name = self.model_cfgs["model_name_or_path"]
         api_key = os.environ.get(self.model_cfgs.get("api_key_name", "OPENAI_API_KEY"))
         base_url = self._BASE_URL_MAP.get(self.model_name, None)
@@ -60,7 +58,7 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
                     **self.inference_cfgs,
                 )
             except Exception as err:
-                _logger.error(
+                self.logger.error(
                     msg=f"第{i+1}次呼叫{self.model_name} API失败，错误信息为{err}"
                 )
                 continue
@@ -71,7 +69,9 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
                 engine="api",
                 meta_data=response.model_dump(),
             )
-        _logger.error(msg=f"所有对{self.model_name} API的呼叫均以失败，返回默认信息")
+        self.logger.error(
+            msg=f"所有对{self.model_name} API的呼叫均以失败，返回默认信息"
+        )
         return InferenceOutput(
             response="",
             input=inference_input.model_dump(),

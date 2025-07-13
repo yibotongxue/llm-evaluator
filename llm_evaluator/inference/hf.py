@@ -19,26 +19,25 @@ __all__ = [
     "HuggingFaceInference",
 ]
 
-_logger = Logger(__name__)
-
 
 class HuggingFaceInference(BaseInference):
     def __init__(
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
+        self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         model_name = self.model_cfgs["model_name_or_path"]
-        _logger.info(f"预备加载模型{model_name}")
+        self.logger.info(f"预备加载模型{model_name}")
         model = AutoModelForCausalLM.from_pretrained(model_name)
-        _logger.info(f"模型{model_name}已加载")
+        self.logger.info(f"模型{model_name}已加载")
         self.tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             model_name,
             padding_side="left",
         )
-        _logger.info(f"分词器{model_name}已加载")
+        self.logger.info(f"分词器{model_name}已加载")
         self.accelerator = Accelerator()
         self.model: PreTrainedModel = self.accelerator.prepare(model)
-        _logger.info(f"使用加速设备{self.accelerator.device}")
+        self.logger.info(f"使用加速设备{self.accelerator.device}")
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.offset = model_cfgs.get("offset", 5)
         self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
@@ -60,6 +59,7 @@ class HuggingFaceInference(BaseInference):
         for batch in input_batches:
             outputs = self.generate_batch(batch)
             result.extend(outputs)
+            torch.cuda.empty_cache()
         return result
 
     def generate_batch(self, batch: list[InferenceInput]) -> list[InferenceOutput]:
@@ -97,12 +97,15 @@ class HuggingFaceInference(BaseInference):
                         encoded_inputs["attention_mask"][i][: -self.offset],
                     ]
                 )
-        outputs = self.model.generate(
-            input_ids=encoded_inputs["input_ids"].to(self.accelerator.device),
-            attention_mask=encoded_inputs["attention_mask"].to(self.accelerator.device),
-            num_return_sequences=1,
-            **generate_cfgs,
-        )
+        with torch.inference_mode():
+            outputs = self.model.generate(
+                input_ids=encoded_inputs["input_ids"].to(self.accelerator.device),
+                attention_mask=encoded_inputs["attention_mask"].to(
+                    self.accelerator.device
+                ),
+                num_return_sequences=1,
+                **generate_cfgs,
+            )
         output_ids = [
             output[encoded_inputs["input_ids"].shape[-1] :] for output in outputs
         ]
