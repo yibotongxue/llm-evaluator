@@ -12,5 +12,10 @@ class BaseInference(ABC):
         self.inference_cfgs = inference_cfgs
 
     @abstractmethod
-    def generate(self, inputs: list[InferenceInput]) -> list[InferenceOutput]:
+    def generate(
+        self,
+        inputs: list[InferenceInput],
+        enable_tqdm: bool = False,
+        tqdm_args: dict[str, Any] | None = None,
+    ) -> list[InferenceOutput]:
         pass

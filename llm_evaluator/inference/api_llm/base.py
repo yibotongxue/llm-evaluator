@@ -1,5 +1,6 @@
 from abc import abstractmethod
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from collections.abc import Iterable
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
 from typing import Any
 
 from tqdm import tqdm
@@ -15,12 +16,22 @@ class BaseApiLLMInference(BaseInference):
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.max_retry: int = self.inference_cfgs.pop("max_retry", 3)
 
-    def generate(self, inputs: list[InferenceInput]) -> list[InferenceOutput]:
+    def generate(
+        self,
+        inputs: list[InferenceInput],
+        enable_tqdm: bool = False,
+        tqdm_args: dict[str, Any] | None = None,
+    ) -> list[InferenceOutput]:
         if len(inputs) == 1:
             return [self._single_generate(inputs[0])]
-        return self._parallel_generate(inputs)
+        return self._parallel_generate(inputs, enable_tqdm, tqdm_args)
 
-    def _parallel_generate(self, inputs: list[InferenceInput]) -> list[InferenceOutput]:
+    def _parallel_generate(
+        self,
+        inputs: list[InferenceInput],
+        enable_tqdm: bool = False,
+        tqdm_args: dict[str, Any] | None = None,
+    ) -> list[InferenceOutput]:
         for inference_input in inputs:
             if inference_input.prefilled:
                 # TODO 需要设计更好的预填充方案
@@ -39,11 +50,12 @@ class BaseApiLLMInference(BaseInference):
                 for idx, input_item in enumerate(inputs)
             }
 
-            for future in tqdm(
-                as_completed(future_to_index),
-                total=len(inputs),
-                desc="Generating responses",
-            ):
+            futures: Iterable[Future[InferenceOutput]] = as_completed(future_to_index)
+            if enable_tqdm:
+                tqdm_args = tqdm_args or {"desc": "Generating responses"}
+                futures = tqdm(futures, total=len(inputs), **tqdm_args)
+
+            for future in futures:
                 idx = future_to_index[future]
                 result = future.result()
                 results[idx] = result

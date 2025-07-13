@@ -1,7 +1,9 @@
+from collections.abc import Iterable
 from typing import Any
 
 import torch
 from accelerate import Accelerator
+from tqdm import tqdm
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -41,12 +43,20 @@ class HuggingFaceInference(BaseInference):
         self.offset = model_cfgs.get("offset", 5)
         self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
 
-    def generate(self, inputs: list[InferenceInput]) -> list[InferenceOutput]:
+    def generate(
+        self,
+        inputs: list[InferenceInput],
+        enable_tqdm: bool = False,
+        tqdm_args: dict[str, Any] | None = None,
+    ) -> list[InferenceOutput]:
         result: list[InferenceOutput] = []
-        input_batches = [
+        input_batches: Iterable[list[InferenceInput]] = [
             inputs[i : i + self.inference_batch_size]
             for i in range(0, len(inputs), self.inference_batch_size)
         ]
+        if enable_tqdm:
+            tqdm_args = tqdm_args or {"desc": "Generating response"}
+            input_batches = tqdm(input_batches, **tqdm_args)
         for batch in input_batches:
             outputs = self.generate_batch(batch)
             result.extend(outputs)
@@ -170,7 +180,11 @@ def main() -> None:
         ),
     ]
 
-    outputs = inference.generate(inference_input)
+    outputs = inference.generate(
+        inference_input,
+        enable_tqdm=True,
+        tqdm_args={"desc": "Generating responses using huggingface transformers"},
+    )
 
     for inference_output in outputs:
         print(inference_output.response)

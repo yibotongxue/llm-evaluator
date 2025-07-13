@@ -53,7 +53,11 @@ def main() -> None:
         ),
     ]
 
-    outputs = inference.generate(inference_input)
+    outputs = inference.generate(
+        inference_input,
+        enable_tqdm=True,
+        tqdm_args={"desc": "Generating responses using api"},
+    )
 
     for inference_output in outputs:
         print(inference_output.response)
