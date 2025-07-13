@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..utils.type_utils import InferenceInput, InferenctOutput
+from ..utils.type_utils import InferenceInput, InferenceOutput
 
 
 class BaseInference(ABC):
@@ -12,5 +12,5 @@ class BaseInference(ABC):
         self.inference_cfgs = inference_cfgs
 
     @abstractmethod
-    def generate(self, inputs: list[InferenceInput]) -> list[InferenctOutput]:
+    def generate(self, inputs: list[InferenceInput]) -> list[InferenceOutput]:
         pass

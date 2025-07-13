@@ -10,7 +10,7 @@ from transformers import (
 )
 
 from ..utils.logger import Logger
-from ..utils.type_utils import InferenceInput, InferenctOutput
+from ..utils.type_utils import InferenceInput, InferenceOutput
 from .base import BaseInference
 
 __all__ = [
@@ -39,15 +39,27 @@ class HuggingFaceInference(BaseInference):
         _logger.info(f"使用加速设备{self.accelerator.device}")
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.offset = model_cfgs.get("offset", 5)
+        self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
 
-    def generate(self, inputs: list[InferenceInput]) -> list[InferenctOutput]:
+    def generate(self, inputs: list[InferenceInput]) -> list[InferenceOutput]:
+        result: list[InferenceOutput] = []
+        input_batches = [
+            inputs[i : i + self.inference_batch_size]
+            for i in range(0, len(inputs), self.inference_batch_size)
+        ]
+        for batch in input_batches:
+            outputs = self.generate_batch(batch)
+            result.extend(outputs)
+        return result
+
+    def generate_batch(self, batch: list[InferenceInput]) -> list[InferenceOutput]:
         tokenize_cfgs = self.inference_cfgs.get("tokenize_cfgs", {})
         generate_cfgs = self.inference_cfgs.get("generate_cfgs", {})
-        for input in inputs:
+        for input in batch:
             input.conversation.insert(
                 0, {"role": "system", "content": input.system_prompt}
             )
-        messages = [input.conversation for input in inputs]
+        messages = [input.conversation for input in batch]
         encoded_inputs = self.tokenizer.apply_chat_template(
             conversation=messages,
             add_generation_prompt=True,
@@ -58,7 +70,7 @@ class HuggingFaceInference(BaseInference):
         )
         pad_id = self.tokenizer.pad_token_id
         for i in range(len(messages)):
-            if inputs[i].prefilled:
+            if batch[i].prefilled:
                 if not messages[i][-1]["role"] == "assistant":
                     raise ValueError(
                         f"使用预填充的时候，最后一轮对话必须是assistant，但当前是{messages[i][-1]["role"]}"
@@ -89,9 +101,9 @@ class HuggingFaceInference(BaseInference):
             for output_id in outputs
         ]
         inference_outptus = [
-            InferenctOutput(
+            InferenceOutput(
                 response=responses[idx],
-                input=inputs[idx].model_dump(),
+                input=batch[idx].model_dump(),
                 engine="hf",
                 meta_data={
                     "output_id": output_ids[idx].tolist(),
@@ -99,7 +111,7 @@ class HuggingFaceInference(BaseInference):
                     "generate_cfgs": generate_cfgs,
                 },
             )
-            for idx in range(len(inputs))
+            for idx in range(len(batch))
         ]
         return inference_outptus
 

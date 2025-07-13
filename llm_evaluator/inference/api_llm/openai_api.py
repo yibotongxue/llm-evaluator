@@ -5,7 +5,7 @@ import openai
 from openai.types.chat.chat_completion_message_param import ChatCompletionMessageParam
 
 from ...utils.logger import Logger
-from ...utils.type_utils import InferenceInput, InferenctOutput
+from ...utils.type_utils import InferenceInput, InferenceOutput
 from .base import BaseApiLLMInference
 
 __all__ = [
@@ -36,7 +36,7 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
         base_url = self._BASE_URL_MAP.get(self.model_name, None)
         self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
 
-    def _single_generate(self, inference_input: InferenceInput) -> InferenctOutput:
+    def _single_generate(self, inference_input: InferenceInput) -> InferenceOutput:
         messages: list[ChatCompletionMessageParam] = []
         messages.append(
             {
@@ -65,14 +65,14 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
                 )
                 continue
             content = response.choices[0].message.content
-            return InferenctOutput(
+            return InferenceOutput(
                 response=content,
                 input=inference_input.model_dump(),
                 engine="api",
                 meta_data=response.model_dump(),
             )
         _logger.error(msg=f"所有对{self.model_name} API的呼叫均以失败，返回默认信息")
-        return InferenctOutput(
+        return InferenceOutput(
             response="",
             input=inference_input.model_dump(),
             engine="api",

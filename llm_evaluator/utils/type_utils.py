@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict
@@ -29,6 +30,13 @@ class InferenceInput(BaseModel):  # type: ignore [misc]
             meta_data={},
         )
 
+    def get_raw_question(self) -> str:
+        if "raw_question" in self.meta_data:
+            return self.meta_data["raw_question"]  # type: ignore [no-any-return]
+        if self.prefilled:
+            return self.conversation[-2]["content"]  # type: ignore [no-any-return]
+        return self.conversation[-1]["content"]  # type: ignore [no-any-return]
+
     def with_system_prompt(self, system_prompt: str) -> InferenceInput:
         raw = {
             **self.model_dump(),
@@ -47,8 +55,21 @@ class InferenceInput(BaseModel):  # type: ignore [misc]
         }
         return InferenceInput(**raw)
 
+    def with_prefill(self, prefix: str) -> InferenceInput:
+        new_conversation = deepcopy(self.conversation)
+        last_message = new_conversation[-1]
+        if last_message["role"] == "assistant":
+            last_message["content"] = prefix
+        else:
+            new_conversation.append({"role": "assistant", "content": prefix})
+        raw = {
+            **self.model_dump(),
+            "conversation": new_conversation,
+        }
+        return InferenceInput(**raw)
 
-class InferenctOutput(BaseModel):  # type: ignore [misc]
+
+class InferenceOutput(BaseModel):  # type: ignore [misc]
     response: str
     input: dict[str, Any]
     engine: str

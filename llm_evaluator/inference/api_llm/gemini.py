@@ -6,7 +6,7 @@ from google.genai import types
 from google.genai.types import ContentDict
 
 from ...utils.logger import Logger
-from ...utils.type_utils import InferenceInput, InferenctOutput
+from ...utils.type_utils import InferenceInput, InferenceOutput
 from .base import BaseApiLLMInference
 
 __all__ = [
@@ -26,7 +26,7 @@ class GeminiApiLLMInference(BaseApiLLMInference):
         api_key = os.environ.get(self.model_cfgs.get("api_key_name", "GOOGLE_API_KEY"))
         self.client = genai.Client(api_key=api_key)
 
-    def _single_generate(self, inference_input: InferenceInput) -> InferenctOutput:
+    def _single_generate(self, inference_input: InferenceInput) -> InferenceOutput:
         for i in range(self.max_retry):
             contents: list[ContentDict] = []
             for turn in inference_input.conversation:
@@ -47,14 +47,14 @@ class GeminiApiLLMInference(BaseApiLLMInference):
                     msg=f"第{i+1}次呼叫{self.model_name} API失败，错误信息为{err}"
                 )
                 continue
-            return InferenctOutput(
+            return InferenceOutput(
                 response=response.text,
                 input=inference_input.model_dump(),
                 engine="api",
                 meta_data=response.model_dump(),
             )
         _logger.error(msg=f"所有对{self.model_name} API的呼叫均以失败，返回默认信息")
-        return InferenctOutput(
+        return InferenceOutput(
             response="",
             input=inference_input.model_dump(),
             engine="api",
