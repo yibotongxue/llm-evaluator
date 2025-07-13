@@ -19,5 +19,9 @@ def get_inference(
         return HuggingFaceInference(
             model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
         )
+    elif backend == "vllm":
+        from .vllm import VllmInference
+
+        return VllmInference(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
     else:
         raise ValueError(f"Not supported inference backend: {backend}")

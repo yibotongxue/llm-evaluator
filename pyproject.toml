@@ -3,22 +3,25 @@ name = "llm-evaluator"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "accelerate>=1.8.1",
+    "datasets>=3.6.0",
     "google-genai>=1.24.0",
-    "numpy>=2.3.1",
+    "numpy==2.2",
     "openai>=1.93.0",
     "pydantic>=2.11.7",
     "pyyaml>=6.0.2",
     "scikit-learn>=1.7.0",
-    "torch>=2.7.1",
+    "torch==2.5.1",
+    "torchaudio==2.5.1",
+    "torchvision==0.20.1",
     "transformers>=4.53.0",
 ]
 
 [tool.black]
 line-length = 88
-target-version = ['py313']
+target-version = ['py312']
 include = '\.pyi?$'
 
 [tool.isort]
@@ -29,7 +32,7 @@ src_paths = ["safety_evaluater", "tests"]
 [tool.mypy]
 strict = true
 ignore_missing_imports = true
-python_version = "3.13"
+python_version = "3.12"
 show_error_codes = true
 disable_error_code = []
 

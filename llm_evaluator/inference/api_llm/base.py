@@ -1,6 +1,5 @@
 from abc import abstractmethod
-from collections.abc import Iterable
-from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from tqdm import tqdm
@@ -50,7 +49,7 @@ class BaseApiLLMInference(BaseInference):
                 for idx, input_item in enumerate(inputs)
             }
 
-            futures: Iterable[Future[InferenceOutput]] = as_completed(future_to_index)
+            futures = as_completed(future_to_index)
             if enable_tqdm:
                 tqdm_args = tqdm_args or {"desc": "Generating responses"}
                 futures = tqdm(futures, total=len(inputs), **tqdm_args)

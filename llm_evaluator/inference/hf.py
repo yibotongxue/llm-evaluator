@@ -1,4 +1,3 @@
-from collections.abc import Iterable
 from typing import Any
 
 import torch
@@ -14,10 +13,6 @@ from transformers import (
 from ..utils.logger import Logger
 from ..utils.type_utils import InferenceInput, InferenceOutput
 from .base import BaseInference
-
-__all__ = [
-    "HuggingFaceInference",
-]
 
 
 class HuggingFaceInference(BaseInference):
@@ -49,7 +44,7 @@ class HuggingFaceInference(BaseInference):
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
         result: list[InferenceOutput] = []
-        input_batches: Iterable[list[InferenceInput]] = [
+        input_batches = [
             inputs[i : i + self.inference_batch_size]
             for i in range(0, len(inputs), self.inference_batch_size)
         ]
