@@ -4,7 +4,12 @@ from typing import Any
 from ..data_loader import get_data_loader
 from ..inference import get_inference
 from ..metrics import BaseMetricsComputer
-from ..utils.type_utils import EvalConfigs, EvaluateResult, InferenceOutput
+from ..utils.type_utils import (
+    EvalConfigs,
+    EvaluateResult,
+    InferenceOutput,
+    MetricsOutput,
+)
 
 
 class BaseBenchmark(ABC):
@@ -38,17 +43,19 @@ class BaseBenchmark(ABC):
         output = self.inference()
         result: dict[str, EvaluateResult] = {}
         for benchmark_name, outputs in output.items():
-            metrics = self.compute_metrics(outputs)
+            metrics = self.compute_metrics(outputs, benchmark_name)
             result[benchmark_name] = metrics
         return result
 
-    def compute_metrics(self, outputs: list[InferenceOutput]) -> EvaluateResult:
-        metrics_result: dict[str, float] = {}
+    def compute_metrics(
+        self, outputs: list[InferenceOutput], benchmark_name: str
+    ) -> EvaluateResult:
+        metrics_result: list[MetricsOutput] = []
         for metrics_computer in self.metrics:
-            metrics_name, metrics_value = metrics_computer.compute_metrics(outputs)
-            metrics_result[metrics_name] = metrics_value
+            metrics_output = metrics_computer.compute_metrics(outputs)
+            metrics_result.append(metrics_output)
         return EvaluateResult(
             metrics=metrics_result,
-            benchmark_cfgs=self.eval_cfgs.benchmarks,
+            benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],
             raw_output=outputs,
         )

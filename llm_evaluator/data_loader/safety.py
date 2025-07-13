@@ -13,6 +13,10 @@ class SafetyBenchmarkDataLoader(BaseBenchmarkDataLoader):
         data_formatter = SafetyDataFormatterRegistry.get_by_name(template)()
         split = benchmark_cfgs.model_dump().get("split", "train")
         dataset = load_dataset(benchmark_cfgs.data_name_or_path)[split]
-        return [
+        data_size = benchmark_cfgs.data_size
+        raw_samples = [
             data_formatter.format_conversation(raw_sample) for raw_sample in dataset
         ]
+        if data_size is not None:
+            raw_samples = raw_samples[: min(data_size, len(dataset))]
+        return raw_samples

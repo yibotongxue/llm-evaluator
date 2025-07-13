@@ -78,8 +78,14 @@ class InferenceOutput(BaseModel):  # type: ignore [misc]
     model_config = ConfigDict(extra="allow")
 
 
+class MetricsOutput(BaseModel):  # type: ignore [misc]
+    metrics_name: str
+    metrics: float
+    meta_data: dict[str, Any] | list[dict[str, Any]]
+
+
 class EvaluateResult(BaseModel):  # type: ignore [misc]
-    metrics: dict[str, float]
+    metrics: list[MetricsOutput]
     benchmark_cfgs: BenchmarkConfigs
     raw_output: list[InferenceOutput]
 
@@ -88,6 +94,7 @@ class BenchmarkConfigs(BaseModel):  # type: ignore [misc]
     data_name_or_path: str
     data_template: str
     task_list: list[str] | None
+    data_size: int | None
 
     model_config = ConfigDict(extra="allow")
 
@@ -98,3 +105,15 @@ class EvalConfigs(BaseModel):  # type: ignore [misc]
     metrics_cfgs: list[dict[str, Any]]
 
     model_config = ConfigDict(extra="allow")
+
+
+def to_dict(
+    obj: BaseModel | dict[str, Any] | list[Any]
+) -> dict[str, Any] | list[Any] | Any:
+    if isinstance(obj, BaseModel):
+        return to_dict(obj.model_dump())
+    if isinstance(obj, dict):
+        return {k: to_dict(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [to_dict(e) for e in obj]
+    return obj

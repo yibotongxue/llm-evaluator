@@ -26,17 +26,34 @@ def load_config(config_path: str) -> dict[str, Any]:
 def update_dict(
     total_dict: dict[str, Any], item_dict: dict[str, Any]
 ) -> dict[str, Any]:
-    def update_dict(
+    def _update_dict(
         total_dict: dict[str, Any], item_dict: dict[str, Any]
     ) -> dict[str, Any]:
+
+        def _is_list_dict(obj: Any) -> bool:
+            return isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], dict)
+
         for key, value in total_dict.items():
             if key in item_dict:
-                total_dict[key] = item_dict[key]
+                if isinstance(item_dict[key], dict) and isinstance(
+                    total_dict[key], dict
+                ):
+                    _update_dict(total_dict[key], item_dict[key])
+                elif isinstance(item_dict[key], dict) and _is_list_dict(
+                    total_dict[key]
+                ):
+                    for element in total_dict[key]:
+                        _update_dict(element, item_dict[key])
+                else:
+                    total_dict[key] = item_dict[key]
             if isinstance(value, dict):
-                update_dict(value, item_dict)
+                _update_dict(value, item_dict)
+            elif _is_list_dict(total_dict[key]):
+                for element in value:
+                    _update_dict(element, item_dict)
         return total_dict
 
-    return update_dict(total_dict, item_dict)
+    return _update_dict(total_dict, item_dict)
 
 
 def is_convertible_to_float(s: str) -> bool:
@@ -53,6 +70,8 @@ def custom_cfgs_to_dict(key_list: str, value: Any) -> dict[str, Any]:
         value = True
     elif value == "False":
         value = False
+    elif value == "None" or value == "null":
+        value = None
     elif value.isdigit():
         value = int(value)
     elif is_convertible_to_float(value):

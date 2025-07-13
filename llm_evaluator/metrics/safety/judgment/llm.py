@@ -19,7 +19,12 @@ class LlmAttackSuccessJudgment(BaseAttackSuccessJudgment):
             model_cfgs=self.model_cfgs, inference_cfgs=self.inference_cfgs
         )
 
-    def judge(self, outputs: list[InferenceOutput]) -> list[float]:
+    def judge(
+        self, outputs: list[InferenceOutput]
+    ) -> list[tuple[float, dict[str, Any]]]:
         prompts = [self.prompt_builder.build_prompt(output) for output in outputs]
         judgments = self.inference.generate(prompts)
-        return [self.prompt_builder.output2rate(judgment) for judgment in judgments]
+        return [
+            (self.prompt_builder.output2rate(judgment), judgment.model_dump())
+            for judgment in judgments
+        ]

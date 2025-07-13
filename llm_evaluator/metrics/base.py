@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
-from ..utils.type_utils import InferenceOutput
+from ..utils.type_utils import InferenceOutput, MetricsOutput
 
 
 class BaseMetricsComputer(ABC):
@@ -10,5 +10,5 @@ class BaseMetricsComputer(ABC):
         self.metrics_name = self.metrics_cfgs.pop("metrics_name")
 
     @abstractmethod
-    def compute_metrics(self, outputs: list[InferenceOutput]) -> tuple[str, float]:
+    def compute_metrics(self, outputs: list[InferenceOutput]) -> MetricsOutput:
         pass

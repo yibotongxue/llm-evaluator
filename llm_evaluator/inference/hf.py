@@ -98,7 +98,7 @@ class HuggingFaceInference(BaseInference):
         ]
         responses = [
             self.tokenizer.decode(output_id, skip_special_tokens=True)
-            for output_id in outputs
+            for output_id in output_ids
         ]
         inference_outptus = [
             InferenceOutput(

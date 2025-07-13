@@ -9,5 +9,7 @@ class BaseAttackSuccessJudgment(ABC):
         self.judgment_cfgs = judgment_cfgs
 
     @abstractmethod
-    def judge(self, outputs: list[InferenceOutput]) -> list[float]:
+    def judge(
+        self, outputs: list[InferenceOutput]
+    ) -> list[tuple[float, dict[str, Any]]]:
         pass
