@@ -107,13 +107,17 @@ class EvalConfigs(BaseModel):  # type: ignore [misc]
     model_config = ConfigDict(extra="allow")
 
 
-def to_dict(
-    obj: BaseModel | dict[str, Any] | list[Any]
-) -> dict[str, Any] | list[Any] | Any:
-    if isinstance(obj, BaseModel):
-        return to_dict(obj.model_dump())
-    if isinstance(obj, dict):
-        return {k: to_dict(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [to_dict(e) for e in obj]
-    return obj
+def to_dict(obj: BaseModel | dict[str, Any]) -> dict[str, Any]:
+
+    def _to_dict(
+        obj: BaseModel | dict[str, Any] | list[Any] | Any
+    ) -> dict[str, Any] | list[Any] | Any:
+        if isinstance(obj, BaseModel):
+            return _to_dict(obj.model_dump())
+        if isinstance(obj, dict):
+            return {k: _to_dict(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_to_dict(e) for e in obj]
+        return obj
+
+    return _to_dict(obj)  # type: ignore [return-value]

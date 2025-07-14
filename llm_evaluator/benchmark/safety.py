@@ -40,7 +40,7 @@ def main() -> None:
     benchmark = SafetyBenchmark(**cfgs)
 
     result = benchmark.evaluate()
-    save_json(to_dict(result), "./temp.json")  # type: ignore [arg-type]
+    save_json(to_dict(result), "./temp.json")
 
 
 if __name__ == "__main__":
