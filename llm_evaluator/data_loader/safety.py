@@ -18,13 +18,19 @@ class SafetyBenchmarkDataLoader(BaseBenchmarkDataLoader):
         # 数据大小
         data_size = data_cfgs.pop("data_size")
 
+        # 任务列表
+        task_list = data_cfgs.pop("task_list")
+
         # 加载数据
         data_path = data_cfgs.pop("data_path")
         data_name = data_cfgs.pop("data_name", None)
         dataset = load_dataset(path=data_path, name=data_name, **data_cfgs)
         raw_samples = [
-            data_formatter.format_conversation(raw_sample) for raw_sample in dataset
+            data_formatter.format_conversation(raw_sample)
+            for raw_sample in dataset
+            if data_formatter.is_in_task_list(raw_sample, task_list)
         ]
+
         if data_size is not None:
-            raw_samples = raw_samples[: min(data_size, len(dataset))]
+            raw_samples = raw_samples[: min(data_size, len(raw_samples))]
         return raw_samples
