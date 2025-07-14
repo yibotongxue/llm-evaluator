@@ -1,0 +1,80 @@
+model_cfgs:
+  model_name_or_path: Qwen/Qwen3-0.6B
+  inference_backend: vllm
+  vllm_init_args:
+    tensor_parallel_size: 1
+    dtype: bfloat16
+    max_model_len: 8192
+    gpu_memory_utilization: 0.9
+    swap_space: 0
+
+inference_cfgs:
+  inference_batch_size: 32
+  sampling_params:
+    max_tokens: 512
+    temperature: 0.8
+    top_p: 0.95
+    frequency_penalty: 0.5
+    stop: ["<|endoftext|>", "\n\n"]
+
+eval_cfgs:
+  benchmark_type: safety
+
+  # 公共配置定义
+  _common: &common_base
+
+    # 公共judgment配置锚点
+    judgment: &common_judgment
+      judgment_type: LLM
+      model_cfgs:
+        inference_backend: api
+        model_sdk_type: openai
+        model_name_or_path: qwen-plus
+        api_key_name: QWEN_API_KEY
+      inference_cfgs:
+        prompt_builder_type: STAR-1
+        max_retry: 3
+        extra_body:
+          enable_thinking: false
+
+    # 公共metrics配置锚点
+    metrics: &common_metrics
+      - metrics_type: ASR
+        metrics_name: ASR
+        judgment_cfgs: *common_judgment
+
+  # Benchmarks配置
+  benchmarks:
+    # Benchmark 1: 完全复用公共metrics配置
+    AdvBench:
+      data_name_or_path: walledai/AdvBench
+      data_template: AdvBench
+      task_list: null
+      data_size: 5
+      metrics_cfgs: *common_metrics  # 直接引用公共配置
+
+    # # Benchmark 2: 复用metrics配置但修改其中一个metric
+    # CustomBench:
+    #   data_name_or_path: custom/path
+    #   data_template: CustomTemplate
+    #   metrics_cfgs:
+    #     <<: *common_metrics  # 继承整个metrics列表
+    #     # 修改列表中第一个metric的特定字段
+    #     - <<: *common_metrics[0]  # 继承第一个metric配置
+    #       metrics_name: "Modified_ASR"  # 覆盖字段
+    #       judgment_cfgs:
+    #         <<: *common_judgment  # 继承judgment配置
+    #         model_cfgs:
+    #           model_name_or_path: "custom-model"  # 覆盖模型名称
+
+    # # Benchmark 3: 复用metrics配置但添加新metric
+    # ExtendedBench:
+    #   data_name_or_path: extended/path
+    #   metrics_cfgs:
+    #     - *common_metrics[0]  # 复用第一个metric
+    #     - metrics_type: NewMetric  # 添加新metric
+    #       metrics_name: Additional_Metric
+    #       # 复用公共judgment配置
+    #       judgment_cfgs: *common_judgment
+
+  attack_cfgs: []

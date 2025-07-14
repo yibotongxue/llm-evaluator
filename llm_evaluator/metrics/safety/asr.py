@@ -10,7 +10,8 @@ from .registry import SafetyMetricsRegistry
 class ASRSafetyMetricsComputer(BaseSafetyMetricsComputer):
     def __init__(self, metrics_cfgs: dict[str, Any]):
         super().__init__(metrics_cfgs)
-        self.judgment = get_attack_success_judgment(metrics_cfgs)
+        judgment_cfgs: dict[str, Any] = metrics_cfgs.get("judgment_cfgs")  # type: ignore [assignment]
+        self.judgment = get_attack_success_judgment(judgment_cfgs=judgment_cfgs)
 
     def compute_metrics(self, outputs: list[InferenceOutput]) -> MetricsOutput:
         judgments = self.judgment.judge(outputs)

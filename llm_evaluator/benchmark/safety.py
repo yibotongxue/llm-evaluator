@@ -4,9 +4,14 @@ from .base import BaseBenchmark
 
 
 class SafetyBenchmark(BaseBenchmark):
-    def init_metrics(self) -> list[BaseMetricsComputer]:
-        metrics_cfgs = self.eval_cfgs.metrics_cfgs
-        return [get_safety_metrics(metrics_cfg) for metrics_cfg in metrics_cfgs]
+    def init_metrics(self) -> dict[str, list[BaseMetricsComputer]]:
+        result: dict[str, list[BaseMetricsComputer]] = {}
+        for benchmark_name, benchmark_cfgs in self.eval_cfgs.benchmarks.items():
+            result[benchmark_name] = [
+                get_safety_metrics(metrics_cfg)
+                for metrics_cfg in benchmark_cfgs.metrics_cfgs
+            ]
+        return result
 
 
 def main() -> None:

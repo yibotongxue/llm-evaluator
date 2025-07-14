@@ -95,6 +95,7 @@ class BenchmarkConfigs(BaseModel):  # type: ignore [misc]
     data_template: str
     task_list: list[str] | None
     data_size: int | None
+    metrics_cfgs: list[dict[str, Any]]
 
     model_config = ConfigDict(extra="allow")
 
@@ -102,7 +103,6 @@ class BenchmarkConfigs(BaseModel):  # type: ignore [misc]
 class EvalConfigs(BaseModel):  # type: ignore [misc]
     benchmarks: dict[str, BenchmarkConfigs]
     attack_cfgs: list[dict[str, Any]]
-    metrics_cfgs: list[dict[str, Any]]
 
     model_config = ConfigDict(extra="allow")
 

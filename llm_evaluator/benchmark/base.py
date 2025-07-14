@@ -30,7 +30,7 @@ class BaseBenchmark(ABC):
         self.metrics = self.init_metrics()
 
     @abstractmethod
-    def init_metrics(self) -> list[BaseMetricsComputer]:
+    def init_metrics(self) -> dict[str, list[BaseMetricsComputer]]:
         pass
 
     def inference(self) -> dict[str, list[InferenceOutput]]:
@@ -43,19 +43,13 @@ class BaseBenchmark(ABC):
         output = self.inference()
         result: dict[str, EvaluateResult] = {}
         for benchmark_name, outputs in output.items():
-            metrics = self.compute_metrics(outputs, benchmark_name)
-            result[benchmark_name] = metrics
+            metrics_result: list[MetricsOutput] = []
+            for metrics_computer in self.metrics[benchmark_name]:
+                metrics_output = metrics_computer.compute_metrics(outputs)
+                metrics_result.append(metrics_output)
+            result[benchmark_name] = EvaluateResult(
+                metrics=metrics_result,
+                benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],
+                raw_output=outputs,
+            )
         return result
-
-    def compute_metrics(
-        self, outputs: list[InferenceOutput], benchmark_name: str
-    ) -> EvaluateResult:
-        metrics_result: list[MetricsOutput] = []
-        for metrics_computer in self.metrics:
-            metrics_output = metrics_computer.compute_metrics(outputs)
-            metrics_result.append(metrics_output)
-        return EvaluateResult(
-            metrics=metrics_result,
-            benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],
-            raw_output=outputs,
-        )
