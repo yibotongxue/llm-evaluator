@@ -9,5 +9,5 @@ class BasePromptBuilder(ABC):
         pass
 
     @abstractmethod
-    def output2rate(self, output: InferenceOutput) -> float:
+    def extract_from_output(self, output: InferenceOutput) -> bool:
         pass

@@ -41,6 +41,7 @@ class BaseBenchmark(ABC):
 
     def evaluate(self) -> dict[str, EvaluateResult]:
         output = self.inference()
+        self.model.shutdown()
         result: dict[str, EvaluateResult] = {}
         for benchmark_name, outputs in output.items():
             metrics_result: list[MetricsOutput] = []

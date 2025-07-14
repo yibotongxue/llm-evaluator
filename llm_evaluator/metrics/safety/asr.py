@@ -15,7 +15,7 @@ class ASRSafetyMetricsComputer(BaseSafetyMetricsComputer):
 
     def compute_metrics(self, outputs: list[InferenceOutput]) -> MetricsOutput:
         judgments = self.judgment.judge(outputs)
-        rates = [judgment[0] for judgment in judgments]
+        rates = [1.0 if judgment else 0.0 for judgment in judgments]
         meta_data = [judgment[1] for judgment in judgments]
         return MetricsOutput(
             metrics_name=self.metrics_name,

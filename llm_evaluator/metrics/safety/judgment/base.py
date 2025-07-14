@@ -11,5 +11,5 @@ class BaseAttackSuccessJudgment(ABC):
     @abstractmethod
     def judge(
         self, outputs: list[InferenceOutput]
-    ) -> list[tuple[float, dict[str, Any]]]:
+    ) -> list[tuple[bool, dict[str, Any]]]:
         pass

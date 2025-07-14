@@ -21,12 +21,12 @@ class LlmAttackSuccessJudgment(BaseAttackSuccessJudgment):
 
     def judge(
         self, outputs: list[InferenceOutput]
-    ) -> list[tuple[float, dict[str, Any]]]:
+    ) -> list[tuple[bool, dict[str, Any]]]:
         prompts = [self.prompt_builder.build_prompt(output) for output in outputs]
         judgments = self.inference.generate(
             prompts, enable_tqdm=True, tqdm_args={"desc": "Judging outputs"}
         )
         return [
-            (self.prompt_builder.output2rate(judgment), judgment.model_dump())
+            (self.prompt_builder.extract_from_output(judgment), judgment.model_dump())
             for judgment in judgments
         ]

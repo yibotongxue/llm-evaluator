@@ -25,17 +25,25 @@ eval_cfgs:
 
     # 公共judgment配置锚点
     judgment: &common_judgment
-      judgment_type: LLM
+      judgment_type: LlamaGuard
       model_cfgs:
-        inference_backend: api
-        model_sdk_type: openai
-        model_name_or_path: qwen-plus
-        api_key_name: QWEN_API_KEY
+        inference_backend: vllm
+        model_name_or_path: meta-llama/Llama-Guard-3-8B
+        vllm_init_args:
+          tensor_parallel_size: 1
+          dtype: bfloat16
+          max_model_len: 8192
+          gpu_memory_utilization: 0.9
+          swap_space: 0
       inference_cfgs:
-        prompt_builder_type: STAR-1
-        max_retry: 3
-        extra_body:
-          enable_thinking: false
+        inference_batch_size: 32
+        sampling_params:
+          temperature: 0.0
+          top_k: 1
+          top_p: 1.0
+          max_tokens: 10
+          skip_special_tokens: true
+          stop: ["<|endoftext|>"]
 
     # 公共metrics配置锚点
     metrics: &common_metrics

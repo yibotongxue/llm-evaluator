@@ -81,7 +81,7 @@ class InferenceInput(CustomBaseModel):
 
 class InferenceOutput(CustomBaseModel):
     response: str
-    input: dict[str, Any]
+    input: InferenceInput
     engine: str
     meta_data: dict[str, Any]
 
