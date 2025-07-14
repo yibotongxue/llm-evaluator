@@ -25,7 +25,7 @@ include = '\.pyi?$'
 [tool.isort]
 profile = "black"
 line_length = 88
-src_paths = ["safety_evaluater", "tests"]
+src_paths = ["llm_evaluator", "tests"]
 
 [tool.mypy]
 strict = true
