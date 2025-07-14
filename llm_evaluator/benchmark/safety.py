@@ -19,7 +19,7 @@ def main() -> None:
 
     from ..utils.config import load_config, update_config_with_unparsed_args
     from ..utils.json_utils import save_json
-    from ..utils.type_utils import to_dict
+    from ..utils.type_utils import to_breif_dict, to_dict
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -40,7 +40,8 @@ def main() -> None:
     benchmark = SafetyBenchmark(**cfgs)
 
     result = benchmark.evaluate()
-    save_json(to_dict(result), "./temp.json")
+    save_json(to_dict(result), "./full_result.json")
+    save_json(to_breif_dict(result), "./brief_result.json")
 
 
 if __name__ == "__main__":

@@ -6,7 +6,17 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict
 
 
-class InferenceInput(BaseModel):  # type: ignore [misc]
+class CustomBaseModel(BaseModel):  # type: ignore [misc]
+    model_config = ConfigDict(extra="allow")
+
+    def to_brief_dict(self) -> dict[str, Any]:
+        raw_dict = deepcopy(self.model_dump())
+        if "meta_data" in raw_dict:
+            raw_dict.pop("meta_data")
+        return raw_dict  # type: ignore [no-any-return]
+
+
+class InferenceInput(CustomBaseModel):
     conversation: list[dict[str, Any]]
     prefilled: bool
     system_prompt: str
@@ -69,7 +79,7 @@ class InferenceInput(BaseModel):  # type: ignore [misc]
         return InferenceInput(**raw)
 
 
-class InferenceOutput(BaseModel):  # type: ignore [misc]
+class InferenceOutput(CustomBaseModel):
     response: str
     input: dict[str, Any]
     engine: str
@@ -78,19 +88,19 @@ class InferenceOutput(BaseModel):  # type: ignore [misc]
     model_config = ConfigDict(extra="allow")
 
 
-class MetricsOutput(BaseModel):  # type: ignore [misc]
+class MetricsOutput(CustomBaseModel):
     metrics_name: str
     metrics: float
     meta_data: dict[str, Any] | list[dict[str, Any]]
 
 
-class EvaluateResult(BaseModel):  # type: ignore [misc]
+class EvaluateResult(CustomBaseModel):
     metrics: list[MetricsOutput]
     benchmark_cfgs: BenchmarkConfigs
     raw_output: list[InferenceOutput]
 
 
-class BenchmarkConfigs(BaseModel):  # type: ignore [misc]
+class BenchmarkConfigs(CustomBaseModel):
     data_name_or_path: str
     data_template: str
     task_list: list[str] | None
@@ -100,7 +110,7 @@ class BenchmarkConfigs(BaseModel):  # type: ignore [misc]
     model_config = ConfigDict(extra="allow")
 
 
-class EvalConfigs(BaseModel):  # type: ignore [misc]
+class EvalConfigs(CustomBaseModel):
     benchmarks: dict[str, BenchmarkConfigs]
     attack_cfgs: list[dict[str, Any]]
 
@@ -121,3 +131,23 @@ def to_dict(obj: BaseModel | dict[str, Any]) -> dict[str, Any]:
         return obj
 
     return _to_dict(obj)  # type: ignore [return-value]
+
+
+def to_breif_dict(obj: CustomBaseModel | BaseModel | dict[str, Any]) -> dict[str, Any]:
+
+    def _to_brief_dict(
+        obj: CustomBaseModel | BaseModel | dict[str, Any] | list[Any] | Any
+    ) -> dict[str, Any] | list[Any] | Any:
+        if isinstance(obj, CustomBaseModel):
+            return _to_brief_dict(obj.to_brief_dict())
+        elif isinstance(obj, BaseModel):
+            return _to_brief_dict(obj.model_dump())
+        if isinstance(obj, dict):
+            return {
+                k: _to_brief_dict(v) for k, v in obj.items() if not k == "meta_data"
+            }
+        if isinstance(obj, list):
+            return [_to_brief_dict(e) for e in obj]
+        return obj
+
+    return _to_brief_dict(obj)  # type: ignore [return-value]

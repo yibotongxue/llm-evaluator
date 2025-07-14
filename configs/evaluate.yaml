@@ -11,11 +11,11 @@ model_cfgs:
 inference_cfgs:
   inference_batch_size: 32
   sampling_params:
-    max_tokens: 512
+    max_tokens: 8192
     temperature: 0.8
     top_p: 0.95
     frequency_penalty: 0.5
-    stop: ["<|endoftext|>", "\n\n"]
+    stop: ["<|endoftext|>"]
 
 eval_cfgs:
   benchmark_type: safety
