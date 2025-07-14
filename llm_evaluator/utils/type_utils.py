@@ -97,14 +97,11 @@ class MetricsOutput(CustomBaseModel):
 class EvaluateResult(CustomBaseModel):
     metrics: list[MetricsOutput]
     benchmark_cfgs: BenchmarkConfigs
-    raw_output: list[InferenceOutput]
+    meta_data: dict[str, Any]
 
 
 class BenchmarkConfigs(CustomBaseModel):
-    data_name_or_path: str
-    data_template: str
-    task_list: list[str] | None
-    data_size: int | None
+    data_cfgs: dict[str, Any]
     metrics_cfgs: list[dict[str, Any]]
 
     model_config = ConfigDict(extra="allow")

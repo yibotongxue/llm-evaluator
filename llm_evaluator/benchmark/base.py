@@ -50,6 +50,6 @@ class BaseBenchmark(ABC):
             result[benchmark_name] = EvaluateResult(
                 metrics=metrics_result,
                 benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],
-                raw_output=outputs,
+                meta_data={"raw_output": outputs},
             )
         return result

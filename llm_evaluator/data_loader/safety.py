@@ -9,11 +9,19 @@ class SafetyBenchmarkDataLoader(BaseBenchmarkDataLoader):
     def load_benchmark_dataset(
         self, benchmark_cfgs: BenchmarkConfigs
     ) -> list[InferenceInput]:
-        template = benchmark_cfgs.data_template
+        data_cfgs = benchmark_cfgs.data_cfgs
+
+        # 格式化模板
+        template = data_cfgs.pop("data_template")
         data_formatter = SafetyDataFormatterRegistry.get_by_name(template)()
-        split = benchmark_cfgs.model_dump().get("split", "train")
-        dataset = load_dataset(benchmark_cfgs.data_name_or_path)[split]
-        data_size = benchmark_cfgs.data_size
+
+        # 数据大小
+        data_size = data_cfgs.pop("data_size")
+
+        # 加载数据
+        data_path = data_cfgs.pop("data_path")
+        data_name = data_cfgs.pop("data_name", None)
+        dataset = load_dataset(path=data_path, name=data_name, **data_cfgs)
         raw_samples = [
             data_formatter.format_conversation(raw_sample) for raw_sample in dataset
         ]

@@ -17,7 +17,11 @@ class SafetyBenchmark(BaseBenchmark):
 def main() -> None:
     import argparse
 
-    from ..utils.config import load_config, update_config_with_unparsed_args
+    from ..utils.config import (
+        deepcopy_config,
+        load_config,
+        update_config_with_unparsed_args,
+    )
     from ..utils.json_utils import save_json
     from ..utils.type_utils import to_breif_dict, to_dict
 
@@ -34,6 +38,10 @@ def main() -> None:
 
     cfgs = load_config(args.config_file_path)
     update_config_with_unparsed_args(unparsed_args=unparsed_args, cfgs=cfgs)
+
+    cfgs = deepcopy_config(cfgs)
+
+    save_json(cfgs, "./cfgs.json")
 
     print(cfgs)
 

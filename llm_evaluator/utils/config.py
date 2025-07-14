@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import Any
 
 import yaml  # type: ignore [import-untyped]
@@ -102,3 +103,15 @@ def update_config_with_unparsed_args(
 
     for k, v in unparsed_args_dict.items():
         cfgs = update_dict(cfgs, custom_cfgs_to_dict(k, v))
+
+
+def deepcopy_config(cfgs: dict[str, Any]) -> dict[str, Any]:
+
+    def _deepcopy_config(obj: object) -> object:
+        if isinstance(obj, dict):
+            return {k: _deepcopy_config(v) for k, v in obj.items()}
+        elif isinstance(obj, list):
+            return [_deepcopy_config(e) for e in obj]
+        return deepcopy(obj)
+
+    return _deepcopy_config(cfgs)  # type: ignore [return-value]

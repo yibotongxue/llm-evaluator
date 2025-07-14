@@ -47,11 +47,34 @@ eval_cfgs:
   benchmarks:
     # Benchmark 1: 完全复用公共metrics配置
     AdvBench:
-      data_name_or_path: walledai/AdvBench
-      data_template: AdvBench
-      task_list: null
-      data_size: 5
+      data_cfgs:
+        data_path: walledai/AdvBench
+        data_name: null
+        data_template: AdvBench
+        split: train
+        task_list: null
+        data_size: 5
       metrics_cfgs: *common_metrics  # 直接引用公共配置
+
+    StrongReject:
+      data_cfgs:
+        data_path: walledai/StrongREJECT
+        data_name: null
+        data_template: StrongReject
+        split: train
+        task_list: null
+        data_size: 5
+      metrics_cfgs: *common_metrics
+
+    JBB-Behaviors:
+      data_cfgs:
+        data_path: JailbreakBench/JBB-Behaviors
+        data_name: behaviors
+        data_template: JBB-Behaviors
+        split: harmful
+        task_list: null
+        data_size: 5
+      metrics_cfgs: *common_metrics
 
     # # Benchmark 2: 复用metrics配置但修改其中一个metric
     # CustomBench:
