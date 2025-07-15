@@ -1,6 +1,7 @@
 import gc
 from typing import Any
 
+import ray
 import torch
 from accelerate import Accelerator
 from tqdm import tqdm
@@ -127,11 +128,13 @@ class HuggingFaceInference(BaseInference):
         return inference_outptus
 
     def shutdown(self) -> None:
+        self.logger.info(f"关闭模型{self.model_name}")
         self.model = None
         self.accelerator = None
         gc.collect()
         torch.cuda.empty_cache()
-        self.logger.info(f"关闭模型{self.model_name}")
+        torch.cuda.synchronize()
+        ray.shutdown()
 
 
 def main() -> None:

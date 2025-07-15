@@ -1,6 +1,7 @@
 import gc
 from typing import Any
 
+import ray
 import torch
 from tqdm import tqdm
 from vllm import LLM, SamplingParams
@@ -103,7 +104,7 @@ class VllmInference(BaseInference):
                 results.append(
                     InferenceOutput(
                         response=generated_text,
-                        input=inputs[i].model_dump(),
+                        input=inputs[i],
                         engine="vllm",
                         meta_data={
                             "output_id": output.outputs[0].token_ids,
@@ -120,6 +121,8 @@ class VllmInference(BaseInference):
         self.tokenizer = None
         gc.collect()
         torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+        ray.shutdown()
 
 
 def main() -> None:

@@ -1,10 +1,11 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from ..utils.shutdownable import Shutdownable
 from ..utils.type_utils import InferenceInput, InferenceOutput
 
 
-class BaseInference(ABC):
+class BaseInference(ABC, Shutdownable):
     def __init__(
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
@@ -18,7 +19,4 @@ class BaseInference(ABC):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
-        pass
-
-    def shutdown(self) -> None:
         pass
