@@ -27,7 +27,8 @@ class LlamaGuardAttackSuccessJudgment(BaseAttackSuccessJudgment):
         inputs: list[InferenceInput] = []
         for output in outputs:
             conversation = deepcopy(output.input.conversation)
-            conversation.pop(0)
+            if conversation[0]["role"] == "system":
+                conversation.pop(0)
             if conversation[-1]["role"] == "assistant":
                 self.logger.warning(
                     f"The last turn of conversation is assistant.\nThe details is {conversation[-1]}. We will remove it"

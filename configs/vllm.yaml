@@ -1,0 +1,18 @@
+model_cfgs:
+  model_name_or_path: Qwen/Qwen3-0.6B
+  vllm_init_args:
+    tensor_parallel_size: 1
+    dtype: float16
+    max_num_seqs: 16
+    max_model_len: 1024
+    gpu_memory_utilization: 0.8
+    swap_space: 0
+
+inference_cfgs:
+  inference_batch_size: 32
+  sampling_params:
+    max_tokens: 512
+    temperature: 0.8
+    top_p: 0.95
+    frequency_penalty: 0.5
+    stop: ["<|endoftext|>"]

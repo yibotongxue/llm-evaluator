@@ -51,6 +51,8 @@ dev = [
     "mypy>=1.16.1",
     "pre-commit>=4.2.0",
     "pytest>=8.4.1",
+    "huggingface-hub>=0.33.4",
+    "modelscope>=1.28.0",
 ]
 
 [tool.uv]

@@ -55,7 +55,10 @@ class VllmInference(BaseInference):
 
             # 插入系统提示
             conversation = input.conversation.copy()
-            conversation.insert(0, {"role": "system", "content": input.system_prompt})
+            if not input.system_prompt == "":
+                conversation.insert(
+                    0, {"role": "system", "content": input.system_prompt}
+                )
 
             # 应用聊天模板
             prompt = self.tokenizer.apply_chat_template(  # type: ignore [union-attr]
