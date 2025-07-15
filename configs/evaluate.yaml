@@ -24,7 +24,7 @@ eval_cfgs:
 
     # 公共judgment配置锚点
     judgment: &common_judgment
-      judgment_type: LlamaGuard
+      judgment_type: LLM
       model_cfgs:
         inference_backend: vllm
         model_name_or_path: meta-llama/Llama-Guard-3-8B
@@ -35,6 +35,7 @@ eval_cfgs:
           max_num_seqs: 32
           gpu_memory_utilization: 0.8
       inference_cfgs:
+        prompt_builder_type: LlamaGuard
         inference_batch_size: 32
         sampling_params:
           temperature: 0.0

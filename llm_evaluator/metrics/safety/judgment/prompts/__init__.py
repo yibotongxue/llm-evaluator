@@ -1,4 +1,5 @@
 from .base import BasePromptBuilder
+from .derived import *
 from .factory import get_prompt_builder
 
 __all__ = [
