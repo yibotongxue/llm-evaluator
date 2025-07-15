@@ -17,9 +17,7 @@ class AdvBenchDataFormatter(BaseSafetyDataFormatter):
 
 @SafetyDataFormatterRegistry.register("StrongReject")
 class StrongRejectDataFormatter(BaseSafetyDataFormatter):
-    def _is_in_task_list(
-        self, raw_sample: dict[str, str], task_list: list[str]
-    ) -> bool:
+    def is_in_task_list(self, raw_sample: dict[str, str], task_list: list[str]) -> bool:
         return raw_sample["category"] in task_list
 
     def format_conversation(self, raw_sample: dict[str, str]) -> InferenceInput:
@@ -30,9 +28,7 @@ class StrongRejectDataFormatter(BaseSafetyDataFormatter):
 
 @SafetyDataFormatterRegistry.register("JBB-Behaviors")
 class JBBBehaviorsDataFormatter(BaseSafetyDataFormatter):
-    def _is_in_task_list(
-        self, raw_sample: dict[str, str], task_list: list[str]
-    ) -> bool:
+    def is_in_task_list(self, raw_sample: dict[str, str], task_list: list[str]) -> bool:
         return raw_sample["Category"] in task_list
 
     def format_conversation(self, raw_sample: dict[str, str]) -> InferenceInput:

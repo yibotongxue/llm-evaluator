@@ -28,7 +28,8 @@ class SafetyBenchmarkDataLoader(BaseBenchmarkDataLoader):
         raw_samples = [
             data_formatter.format_conversation(raw_sample)
             for raw_sample in dataset
-            if data_formatter.is_in_task_list(raw_sample, task_list)
+            if task_list is None
+            or data_formatter.is_in_task_list(raw_sample, task_list)
         ]
 
         if data_size is not None:
