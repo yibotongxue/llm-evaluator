@@ -51,6 +51,7 @@ class BaseBenchmark(ABC):
             for metrics_computer in self.metrics[benchmark_name]:
                 metrics_output = metrics_computer.compute_metrics(outputs)
                 metrics_result.append(metrics_output)
+                metrics_computer.shutdown()
             result[benchmark_name] = EvaluateResult(
                 metrics=metrics_result,
                 benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],
