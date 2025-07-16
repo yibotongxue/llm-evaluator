@@ -24,7 +24,6 @@ class LlmAttackSuccessJudgment(BaseAttackSuccessJudgment):
             self.inference = InferenceFactory().get_inference_instance(
                 model_cfgs=self.model_cfgs, inference_cfgs=self.inference_cfgs
             )
-        InferenceFactory().focus(self.inference)
         prompts = [self.prompt_builder.build_prompt(output) for output in outputs]
         judgments = self.inference.generate(
             prompts, enable_tqdm=True, tqdm_args={"desc": "Judging outputs"}

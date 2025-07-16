@@ -39,7 +39,6 @@ class BaseBenchmark(ABC):
 
     def inference(self) -> dict[str, list[InferenceOutput]]:
         result: dict[str, list[InferenceOutput]] = {}
-        InferenceFactory().focus(self.model)
         for benchmark_name, inputs in self.dataset.items():
             result[benchmark_name] = self.model.generate(inputs)
         return result

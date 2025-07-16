@@ -27,6 +27,11 @@ class InferenceFactory:
             "inference_cfgs": inference_cfgs.copy(),
         }
         cfgs_hash = dict_to_hash(cfgs_dict)
+
+        for k, v in self._inference_pool.items():
+            if not k == cfgs_hash:
+                v.shutdown()
+
         if cfgs_hash in self._inference_pool:
             return self._inference_pool[cfgs_hash]
 
@@ -57,9 +62,3 @@ class InferenceFactory:
             )
         else:
             raise ValueError(f"Not supported inference backend: {backend}")
-
-    def focus(self, inference: BaseInference) -> None:
-        """实例方法版本 (原类方法功能)"""
-        for cfgs_hash, inference_instance in self._inference_pool.items():
-            if not inference.cfgs_hash == cfgs_hash:
-                inference_instance.shutdown()
