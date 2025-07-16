@@ -13,6 +13,7 @@ dependencies = [
     "openai>=1.93.0",
     "pydantic>=2.11.7",
     "pyyaml>=6.0.2",
+    "redis>=6.2.0",
     "scikit-learn>=1.7.0",
     "torch==2.6.0",
     "transformers>=4.53.0",
