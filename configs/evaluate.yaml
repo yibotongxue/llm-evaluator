@@ -16,6 +16,11 @@ inference_cfgs:
     frequency_penalty: 0.5
     stop: ["<|endoftext|>"]
 
+cache_cfgs:
+  cache_type: json_file
+  cache_dir: ./cache/inference
+  flush_threshold: 10
+
 eval_cfgs:
   benchmark_type: safety
 
@@ -44,6 +49,10 @@ eval_cfgs:
           max_tokens: 10
           skip_special_tokens: true
           stop: ["<|endoftext|>"]
+      cache_cfgs:
+        cache_type: json_file
+        cache_dir: ./cache/judgment_inference
+        flush_threshold: 10
 
     # 公共metrics配置锚点
     metrics: &common_metrics
