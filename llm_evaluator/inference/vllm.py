@@ -109,7 +109,7 @@ class VllmInference(BaseInference):
                 results.append(
                     InferenceOutput(
                         response=generated_text,
-                        input=inputs[i],
+                        input=inputs[i].model_dump(),
                         engine="vllm",
                         meta_data={
                             "output_id": output.outputs[0].token_ids,

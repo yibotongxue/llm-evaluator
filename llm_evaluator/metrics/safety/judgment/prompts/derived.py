@@ -10,7 +10,7 @@ class LlamaGuardPromptBuilder(BasePromptBuilder):
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
     def build_prompt(self, output: InferenceOutput) -> InferenceInput:
-        conversation = output.input.conversation.copy()
+        conversation = InferenceInput(**output.input).conversation.copy()
         if conversation[0]["role"] == "system":
             conversation.pop(0)
         if conversation[-1]["role"] == "assistant":

@@ -20,6 +20,7 @@ class BaseBenchmark(ABC):
         eval_cfgs: dict[str, Any],
         model_cfgs: dict[str, Any],
         inference_cfgs: dict[str, Any],
+        cache_cfgs: dict[str, Any] | None,
     ):
         self.eval_cfgs = EvalConfigs(**eval_cfgs)
         self.attack_cfgs = self.eval_cfgs.attack_cfgs
@@ -27,7 +28,7 @@ class BaseBenchmark(ABC):
         self.inference_cfgs = inference_cfgs
         self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
         self.model = InferenceFactory.get_inference_instance(
-            model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
+            model_cfgs=model_cfgs, inference_cfgs=inference_cfgs, cache_cfgs=cache_cfgs
         )
         data_loader = get_data_loader(eval_cfgs=eval_cfgs)
         self.dataset = data_loader.load_dataset()
