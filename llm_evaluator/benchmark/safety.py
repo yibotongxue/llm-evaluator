@@ -41,15 +41,17 @@ def main() -> None:
 
     cfgs = deepcopy_config(cfgs)
 
-    save_json(cfgs, "./cfgs.json")
+    output_dir = cfgs["eval_cfgs"].pop("output_dir", "./output")
+
+    save_json(cfgs, f"{output_dir}/cfgs.json")
 
     print(cfgs)
 
     benchmark = SafetyBenchmark(**cfgs)
 
     result = benchmark.evaluate()
-    save_json(to_dict(result), "./full_result.json")
-    save_json(to_breif_dict(result), "./brief_result.json")
+    save_json(to_dict(result), f"{output_dir}/full_result.json")
+    save_json(to_breif_dict(result), f"{output_dir}/brief_result.json")
 
 
 if __name__ == "__main__":

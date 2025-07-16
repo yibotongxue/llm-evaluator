@@ -22,6 +22,7 @@ cache_cfgs:
   flush_threshold: 10
 
 eval_cfgs:
+  output_dir: ./output
   benchmark_type: safety
 
   # 公共配置定义

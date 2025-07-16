@@ -4,13 +4,11 @@ from typing import Any
 from ..data_loader import get_data_loader
 from ..inference import InferenceFactory
 from ..metrics import BaseMetricsComputer
-from ..utils.json_utils import save_json
 from ..utils.type_utils import (
     EvalConfigs,
     EvaluateResult,
     InferenceOutput,
     MetricsOutput,
-    to_dict,
 )
 
 
@@ -50,7 +48,6 @@ class BaseBenchmark(ABC):
 
     def evaluate(self) -> dict[str, EvaluateResult]:
         output = self.inference()
-        save_json(to_dict(output), "./output.json")
         result: dict[str, EvaluateResult] = {}
         for benchmark_name, outputs in output.items():
             metrics_result: list[MetricsOutput] = []
