@@ -41,7 +41,11 @@ class BaseBenchmark(ABC):
     def inference(self) -> dict[str, list[InferenceOutput]]:
         result: dict[str, list[InferenceOutput]] = {}
         for benchmark_name, inputs in self.dataset.items():
-            result[benchmark_name] = self.model.generate(inputs)
+            result[benchmark_name] = self.model.generate(
+                inputs,
+                enable_tqdm=True,
+                tqdm_args={"desc": f"Generating outputs for {benchmark_name}"},
+            )
         return result
 
     def evaluate(self) -> dict[str, EvaluateResult]:

@@ -1,8 +1,8 @@
 model_cfgs:
-  model_name_or_path: Qwen/Qwen3-0.6B
+  model_name_or_path: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
   inference_backend: vllm
   vllm_init_args:
-    tensor_parallel_size: 1
+    tensor_parallel_size: 4
     dtype: bfloat16
     max_model_len: 8192
     gpu_memory_utilization: 0.9
@@ -11,9 +11,9 @@ inference_cfgs:
   inference_batch_size: 32
   sampling_params:
     max_tokens: 8192
-    temperature: 0.8
-    top_p: 0.95
-    frequency_penalty: 0.5
+    temperature: 0.0
+    top_k: 1
+    top_p: 1.0
     stop: ["<|endoftext|>"]
 
 cache_cfgs:
@@ -70,7 +70,7 @@ eval_cfgs:
         data_template: AdvBench
         split: train
         task_list: null
-        data_size: 5
+        data_size: null
       metrics_cfgs: *common_metrics  # 直接引用公共配置
 
     StrongReject:
@@ -80,7 +80,7 @@ eval_cfgs:
         data_template: StrongReject
         split: train
         task_list: null
-        data_size: 5
+        data_size: null
       metrics_cfgs: *common_metrics
 
     JBB-Behaviors:
@@ -90,7 +90,7 @@ eval_cfgs:
         data_template: JBB-Behaviors
         split: harmful
         task_list: null
-        data_size: 5
+        data_size: null
       metrics_cfgs: *common_metrics
 
     # # Benchmark 2: 复用metrics配置但修改其中一个metric
