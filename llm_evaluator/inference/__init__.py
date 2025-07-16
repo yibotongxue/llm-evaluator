@@ -1,7 +1,7 @@
 from .base import BaseInference
-from .factory import get_inference
+from .factory import InferenceFactory
 
 __all__ = [
     "BaseInference",
-    "get_inference",
+    "InferenceFactory",
 ]

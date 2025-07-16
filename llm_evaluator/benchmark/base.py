@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from ..data_loader import get_data_loader
-from ..inference import get_inference
+from ..inference import InferenceFactory
 from ..metrics import BaseMetricsComputer
 from ..utils.json_utils import save_json
 from ..utils.type_utils import (
@@ -26,7 +26,9 @@ class BaseBenchmark(ABC):
         self.model_cfgs = model_cfgs
         self.inference_cfgs = inference_cfgs
         self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
-        self.model = get_inference(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
+        self.model = InferenceFactory().get_inference_instance(
+            model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
+        )
         data_loader = get_data_loader(eval_cfgs=eval_cfgs)
         self.dataset = data_loader.load_dataset()
         self.metrics = self.init_metrics()
@@ -37,13 +39,13 @@ class BaseBenchmark(ABC):
 
     def inference(self) -> dict[str, list[InferenceOutput]]:
         result: dict[str, list[InferenceOutput]] = {}
+        InferenceFactory().focus(self.model)
         for benchmark_name, inputs in self.dataset.items():
             result[benchmark_name] = self.model.generate(inputs)
         return result
 
     def evaluate(self) -> dict[str, EvaluateResult]:
         output = self.inference()
-        self.model.shutdown()
         save_json(to_dict(output), "./output.json")
         result: dict[str, EvaluateResult] = {}
         for benchmark_name, outputs in output.items():
@@ -51,7 +53,6 @@ class BaseBenchmark(ABC):
             for metrics_computer in self.metrics[benchmark_name]:
                 metrics_output = metrics_computer.compute_metrics(outputs)
                 metrics_result.append(metrics_output)
-                metrics_computer.shutdown()
             result[benchmark_name] = EvaluateResult(
                 metrics=metrics_result,
                 benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],

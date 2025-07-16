@@ -7,8 +7,9 @@ from ..utils.type_utils import InferenceInput, InferenceOutput
 
 class BaseInference(ABC, Shutdownable):
     def __init__(
-        self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
+        self, cfgs_hash: str, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
+        self._cfgs_hash = cfgs_hash
         self.model_cfgs = model_cfgs
         self.inference_cfgs = inference_cfgs
 
@@ -20,3 +21,7 @@ class BaseInference(ABC, Shutdownable):
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
         pass
+
+    @property
+    def cfgs_hash(self) -> str:
+        return self._cfgs_hash

@@ -15,9 +15,11 @@ from .base import BaseInference
 
 class VllmInference(BaseInference):
     def __init__(
-        self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
+        self, cfgs_hash: str, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
-        super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
+        super().__init__(
+            cfgs_hash=cfgs_hash, model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
+        )
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
         # 提取模型配置
@@ -119,13 +121,16 @@ class VllmInference(BaseInference):
         return results
 
     def shutdown(self) -> None:
-        self.logger.info(f"关闭模型{self.model_name}")
-        self.llm = None
-        self.tokenizer = None
-        gc.collect()
-        torch.cuda.empty_cache()
-        torch.cuda.synchronize()
-        ray.shutdown()
+        if self.llm is not None:
+            self.logger.info(f"关闭模型{self.model_name}")
+            self.llm = None
+            self.tokenizer = None
+            gc.collect()
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+            ray.shutdown()
+        else:
+            self.logger.info(f"模型已经处于关闭状态，不需再行关闭")
 
 
 def main() -> None:
@@ -148,7 +153,9 @@ def main() -> None:
     update_config_with_unparsed_args(unparsed_args=unparsed_args, cfgs=cfgs)
 
     inference = VllmInference(
-        model_cfgs=cfgs["model_cfgs"], inference_cfgs=cfgs["inference_cfgs"]
+        cfgs_hash="",
+        model_cfgs=cfgs["model_cfgs"],
+        inference_cfgs=cfgs["inference_cfgs"],
     )
 
     inference_input = [

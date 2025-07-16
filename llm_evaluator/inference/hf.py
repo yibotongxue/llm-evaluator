@@ -19,9 +19,11 @@ from .base import BaseInference
 
 class HuggingFaceInference(BaseInference):
     def __init__(
-        self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
+        self, cfgs_hash: str, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
-        super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
+        super().__init__(
+            cfgs_hash=cfgs_hash, model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
+        )
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         self.model_name = self.model_cfgs["model_name_or_path"]
         self.model: PreTrainedModel | None = None
@@ -128,13 +130,16 @@ class HuggingFaceInference(BaseInference):
         return inference_outptus
 
     def shutdown(self) -> None:
-        self.logger.info(f"关闭模型{self.model_name}")
-        self.model = None
-        self.accelerator = None
-        gc.collect()
-        torch.cuda.empty_cache()
-        torch.cuda.synchronize()
-        ray.shutdown()
+        if self.model is not None:
+            self.logger.info(f"关闭模型{self.model_name}")
+            self.model = None
+            self.accelerator = None
+            gc.collect()
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+            ray.shutdown()
+        else:
+            self.logger.info(f"模型已经处于关闭状态，不需再行关闭")
 
 
 def main() -> None:
@@ -157,7 +162,9 @@ def main() -> None:
     update_config_with_unparsed_args(unparsed_args=unparsed_args, cfgs=cfgs)
 
     inference = HuggingFaceInference(
-        model_cfgs=cfgs["model_cfgs"], inference_cfgs=cfgs["inference_cfgs"]
+        cfgs_hash="",
+        model_cfgs=cfgs["model_cfgs"],
+        inference_cfgs=cfgs["inference_cfgs"],
     )
 
     inference_input = [

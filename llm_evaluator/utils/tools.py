@@ -1,3 +1,5 @@
+import hashlib
+import json
 import os
 from typing import Any
 
@@ -11,3 +13,9 @@ def load_api_key(cfgs: dict[str, Any]) -> dict[str, Any]:
         return cfgs
     else:
         return cfgs
+
+
+def dict_to_hash(d: dict[Any, Any]) -> str:
+    """生成字典的SHA256哈希摘要"""
+    s = json.dumps(d, sort_keys=True).encode()
+    return hashlib.sha256(s).hexdigest()
