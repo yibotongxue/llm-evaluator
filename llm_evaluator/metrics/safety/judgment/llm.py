@@ -21,7 +21,7 @@ class LlmAttackSuccessJudgment(BaseAttackSuccessJudgment):
         self, outputs: list[InferenceOutput]
     ) -> list[tuple[bool, dict[str, Any]]]:
         if self.inference is None:
-            self.inference = InferenceFactory().get_inference_instance(
+            self.inference = InferenceFactory.get_inference_instance(
                 model_cfgs=self.model_cfgs, inference_cfgs=self.inference_cfgs
             )
         prompts = [self.prompt_builder.build_prompt(output) for output in outputs]
