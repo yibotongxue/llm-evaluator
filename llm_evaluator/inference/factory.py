@@ -29,7 +29,6 @@ class InferenceFactory:
         cls,
         model_cfgs: dict[str, Any],
         inference_cfgs: dict[str, Any],
-        cached_cfgs: dict[str, Any] | None = None,
     ) -> BaseInference:
         cfgs_dict = {
             "model_cfgs": model_cfgs.copy(),
@@ -52,7 +51,6 @@ class InferenceFactory:
             from .api_llm import get_api_llm_inference
 
             instance = get_api_llm_inference(
-                cfgs_hash=cfgs_hash,
                 model_cfgs=model_cfgs,
                 inference_cfgs=inference_cfgs,
             )
@@ -60,7 +58,6 @@ class InferenceFactory:
             from .hf import HuggingFaceInference
 
             instance = HuggingFaceInference(
-                cfgs_hash=cfgs_hash,
                 model_cfgs=model_cfgs,
                 inference_cfgs=inference_cfgs,
             )
@@ -68,7 +65,6 @@ class InferenceFactory:
             from .vllm import VllmInference
 
             instance = VllmInference(
-                cfgs_hash=cfgs_hash,
                 model_cfgs=model_cfgs,
                 inference_cfgs=inference_cfgs,
             )

@@ -10,11 +10,9 @@ from ..base import BaseInference
 
 class BaseApiLLMInference(BaseInference):
     def __init__(
-        self, cfgs_hash: str, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
+        self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
-        super().__init__(
-            cfgs_hash=cfgs_hash, model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
-        )
+        super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.max_retry: int = self.inference_cfgs.pop("max_retry", 3)
         self.max_workers: int = self.inference_cfgs.pop("max_workers", 32)
         self.sleep_seconds: int = self.inference_cfgs.pop("sleep_seconds", 30)

@@ -15,11 +15,9 @@ from .base import BaseInference
 
 class VllmInference(BaseInference):
     def __init__(
-        self, cfgs_hash: str, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
+        self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
-        super().__init__(
-            cfgs_hash=cfgs_hash, model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
-        )
+        super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
         # 提取模型配置
@@ -153,7 +151,6 @@ def main() -> None:
     update_config_with_unparsed_args(unparsed_args=unparsed_args, cfgs=cfgs)
 
     inference = VllmInference(
-        cfgs_hash="",
         model_cfgs=cfgs["model_cfgs"],
         inference_cfgs=cfgs["inference_cfgs"],
     )

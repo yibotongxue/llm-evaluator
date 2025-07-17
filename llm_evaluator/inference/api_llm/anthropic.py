@@ -16,11 +16,9 @@ class AnthropicApiLLMInference(BaseApiLLMInference):
     }
 
     def __init__(
-        self, cfgs_hash: str, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
+        self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
-        super().__init__(
-            cfgs_hash=cfgs_hash, model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
-        )
+        super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         self.model_name = self.model_cfgs["model_name_or_path"]
         api_key = self.model_cfgs.get("api_key")

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from typing import Any
 
 from ..cache_manager import BaseCacheManager
@@ -52,6 +53,11 @@ class CachedInference(InferenceInterface):
                 result.append(non_cached_outputs[non_cached_idx])
                 non_cached_idx += 1
         return result
+
+    def _update_inference_cfgs(
+        self, new_inference_cfgs: dict[str, Any]
+    ) -> Callable[[], None]:
+        return self.inference._update_inference_cfgs(new_inference_cfgs)
 
     def _generate_key(self, inference_input: InferenceInput) -> str:
         key_message = {
