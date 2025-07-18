@@ -66,20 +66,20 @@ eval_cfgs:
     # Benchmark 1: 完全复用公共metrics配置
     AdvBench:
       data_cfgs:
-        data_path: walledai/AdvBench
+        data_path: csv
         data_name: null
         data_template: AdvBench
-        split: train
+        data_files: https://raw.githubusercontent.com/llm-attacks/llm-attacks/refs/heads/main/data/advbench/harmful_behaviors.csv
         task_list: null
         data_size: null
       metrics_cfgs: *common_metrics  # 直接引用公共配置
 
     StrongReject:
       data_cfgs:
-        data_path: walledai/StrongREJECT
+        data_path: csv
         data_name: null
         data_template: StrongReject
-        split: train
+        data_files: https://raw.githubusercontent.com/alexandrasouly/strongreject/refs/heads/main/strongreject_dataset/strongreject_dataset.csv
         task_list: null
         data_size: null
       metrics_cfgs: *common_metrics

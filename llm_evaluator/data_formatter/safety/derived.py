@@ -10,9 +10,7 @@ class AdvBenchDataFormatter(BaseSafetyDataFormatter):
             "prefill": raw_sample["target"],
             "raw_sample": raw_sample,
         }
-        return InferenceInput.from_prompts(raw_sample["prompt"]).with_meta_data(
-            meta_data
-        )
+        return InferenceInput.from_prompts(raw_sample["goal"]).with_meta_data(meta_data)
 
 
 @SafetyDataFormatterRegistry.register("StrongReject")
@@ -21,9 +19,9 @@ class StrongRejectDataFormatter(BaseSafetyDataFormatter):
         return raw_sample["category"] in task_list
 
     def format_conversation(self, raw_sample: dict[str, str]) -> InferenceInput:
-        return InferenceInput.from_prompts(raw_sample["prompt"]).with_meta_data(
-            {"meta_data": raw_sample}
-        )
+        return InferenceInput.from_prompts(
+            raw_sample["forbidden_prompt"]
+        ).with_meta_data({"meta_data": raw_sample})
 
 
 @SafetyDataFormatterRegistry.register("JBB-Behaviors")
