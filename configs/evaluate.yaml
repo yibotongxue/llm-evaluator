@@ -6,9 +6,10 @@ model_cfgs:
     dtype: bfloat16
     max_model_len: 8192
     gpu_memory_utilization: 0.9
+    max_num_seqs: 64
+    enable_prefix_caching: true
 
 inference_cfgs:
-  inference_batch_size: 32
   sampling_params:
     max_tokens: 8192
     temperature: 0.0
@@ -38,11 +39,11 @@ eval_cfgs:
           tensor_parallel_size: 4
           dtype: bfloat16
           max_model_len: 8192
-          max_num_seqs: 32
-          gpu_memory_utilization: 0.8
+          max_num_seqs: 64
+          gpu_memory_utilization: 0.9
+          enable_prefix_caching: true
       inference_cfgs:
         prompt_builder_type: LlamaGuard
-        inference_batch_size: 32
         sampling_params:
           temperature: 0.0
           top_k: 1
@@ -67,31 +68,34 @@ eval_cfgs:
     AdvBench:
       data_cfgs:
         data_path: csv
-        data_name: null
         data_template: AdvBench
-        data_files: https://raw.githubusercontent.com/llm-attacks/llm-attacks/refs/heads/main/data/advbench/harmful_behaviors.csv
         task_list: null
         data_size: null
+        load_cfgs:
+          data_files: https://raw.githubusercontent.com/llm-attacks/llm-attacks/refs/heads/main/data/advbench/harmful_behaviors.csv
+          split: train
       metrics_cfgs: *common_metrics  # 直接引用公共配置
 
     StrongReject:
       data_cfgs:
         data_path: csv
-        data_name: null
         data_template: StrongReject
-        data_files: https://raw.githubusercontent.com/alexandrasouly/strongreject/refs/heads/main/strongreject_dataset/strongreject_dataset.csv
-        task_list: null
         data_size: null
+        task_list: null
+        load_cfgs:
+          data_files: https://raw.githubusercontent.com/alexandrasouly/strongreject/refs/heads/main/strongreject_dataset/strongreject_dataset.csv
+          split: train
       metrics_cfgs: *common_metrics
 
     JBB-Behaviors:
       data_cfgs:
         data_path: JailbreakBench/JBB-Behaviors
-        data_name: behaviors
         data_template: JBB-Behaviors
-        split: harmful
         task_list: null
         data_size: null
+        load_cfgs:
+          name: behaviors
+          split: harmful
       metrics_cfgs: *common_metrics
 
     # # Benchmark 2: 复用metrics配置但修改其中一个metric

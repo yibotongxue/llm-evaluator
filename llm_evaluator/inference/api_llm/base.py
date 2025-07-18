@@ -23,6 +23,8 @@ class BaseApiLLMInference(BaseInference):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
+        if len(inputs) == 0:
+            return []
         if len(inputs) == 1:
             return [self._single_generate(inputs[0])]
         return self._parallel_generate(inputs, enable_tqdm, tqdm_args)

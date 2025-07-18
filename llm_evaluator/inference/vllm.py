@@ -3,7 +3,6 @@ from typing import Any
 
 import ray
 import torch
-from tqdm import tqdm
 from vllm import LLM, SamplingParams
 from vllm.outputs import RequestOutput
 from vllm.transformers_utils.tokenizer import AnyTokenizer
@@ -29,8 +28,6 @@ class VllmInference(BaseInference):
         self.tokenizer: AnyTokenizer | None = None
         self.logger.info(f"vLLM model {self.model_name} loaded successfully")
 
-        # 推理配置
-        self.inference_batch_size = inference_cfgs.get("inference_batch_size", 32)
         self.sampling_params = SamplingParams(
             **inference_cfgs.get("sampling_params", {})
         )
@@ -73,6 +70,8 @@ class VllmInference(BaseInference):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
+        if len(inputs) == 0:
+            return []
         if self.llm is None:
             self.llm = LLM(model=self.model_name, **self.vllm_init_args)
             self.tokenizer = self.llm.get_tokenizer()
@@ -81,40 +80,27 @@ class VllmInference(BaseInference):
 
         # 准备所有提示
         prompts = self._prepare_prompts(inputs)
+        # 执行推理
+        outputs: list[RequestOutput] = self.llm.generate(
+            prompts, sampling_params=self.sampling_params
+        )
 
-        # 分批处理
-        batches = [
-            prompts[i : i + self.inference_batch_size]
-            for i in range(0, len(prompts), self.inference_batch_size)
-        ]
+        # 处理结果
+        for i, output in enumerate(outputs):
+            # 获取生成的文本
+            generated_text = output.outputs[0].text
 
-        # 创建进度条
-        if enable_tqdm:
-            tqdm_args = tqdm_args or {"desc": "Generating responses (vLLM)"}
-            batches = tqdm(batches, **tqdm_args)
-
-        for batch in batches:
-            # 执行推理
-            outputs: list[RequestOutput] = self.llm.generate(
-                batch, sampling_params=self.sampling_params
-            )
-
-            # 处理结果
-            for i, output in enumerate(outputs):
-                # 获取生成的文本
-                generated_text = output.outputs[0].text
-
-                results.append(
-                    InferenceOutput(
-                        response=generated_text,
-                        input=inputs[i].model_dump(),
-                        engine="vllm",
-                        meta_data={
-                            "output_id": output.outputs[0].token_ids,
-                            "sampling_params": self.inference_cfgs,
-                        },
-                    )
+            results.append(
+                InferenceOutput(
+                    response=generated_text,
+                    input=inputs[i].model_dump(),
+                    engine="vllm",
+                    meta_data={
+                        "output_id": output.outputs[0].token_ids,
+                        "sampling_params": self.inference_cfgs,
+                    },
                 )
+            )
 
         return results
 

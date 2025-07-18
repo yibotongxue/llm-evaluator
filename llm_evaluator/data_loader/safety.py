@@ -12,19 +12,19 @@ class SafetyBenchmarkDataLoader(BaseBenchmarkDataLoader):
         data_cfgs = benchmark_cfgs.data_cfgs
 
         # 格式化模板
-        template = data_cfgs.pop("data_template")
+        template: str = data_cfgs.get("data_template", "default")
         data_formatter = SafetyDataFormatterRegistry.get_by_name(template)()
 
         # 数据大小
-        data_size = data_cfgs.pop("data_size")
+        data_size = data_cfgs.get("data_size")
 
         # 任务列表
-        task_list = data_cfgs.pop("task_list")
+        task_list = data_cfgs.get("task_list")
 
         # 加载数据
-        data_path = data_cfgs.pop("data_path")
-        data_name = data_cfgs.pop("data_name", None)
-        dataset = load_dataset(path=data_path, name=data_name, **data_cfgs)
+        data_path = data_cfgs["data_path"]
+        load_cfgs = data_cfgs.get("load_cfgs", {})
+        dataset = load_dataset(path=data_path, **load_cfgs)
         raw_samples = [
             data_formatter.format_conversation(raw_sample)
             for raw_sample in dataset

@@ -24,7 +24,6 @@ class BaseBenchmark(ABC):
         self.attack_cfgs = self.eval_cfgs.attack_cfgs
         self.model_cfgs = model_cfgs
         self.inference_cfgs = inference_cfgs
-        self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
         self.model = InferenceFactory.get_inference_instance(
             model_cfgs=model_cfgs, inference_cfgs=inference_cfgs, cache_cfgs=cache_cfgs
         )

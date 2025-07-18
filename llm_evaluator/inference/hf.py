@@ -33,7 +33,7 @@ class HuggingFaceInference(BaseInference):
         self.accelerator: Accelerator | None = None
         self.tokenizer.pad_token = self.tokenizer.eos_token
         self.offset = model_cfgs.get("offset", 5)
-        self.inference_batch_size = inference_cfgs.pop("inference_batch_size", 32)
+        self.inference_batch_size = inference_cfgs.get("inference_batch_size", 32)
 
     def generate(
         self,
@@ -41,6 +41,8 @@ class HuggingFaceInference(BaseInference):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
+        if len(inputs) == 0:
+            return []
         if self.model is None:
             self.logger.info(f"预备加载模型{self.model_name}")
             self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
