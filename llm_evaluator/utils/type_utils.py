@@ -20,6 +20,7 @@ class InferenceInput(CustomBaseModel):
     conversation: list[dict[str, Any]]
     prefilled: bool
     system_prompt: str
+    ref_answer: str | None = None
     meta_data: dict[str, Any]
 
     model_config = ConfigDict(extra="allow")
@@ -81,6 +82,7 @@ class InferenceInput(CustomBaseModel):
 
 class InferenceOutput(CustomBaseModel):
     response: str
+    extracted_answer: str | None = None
     input: dict[str, Any]
     engine: str
     meta_data: dict[str, Any]
@@ -109,7 +111,7 @@ class BenchmarkConfigs(CustomBaseModel):
 
 class EvalConfigs(CustomBaseModel):
     benchmarks: dict[str, BenchmarkConfigs]
-    attack_cfgs: list[dict[str, Any]]
+    attack_cfgs: list[dict[str, Any]] | None = None
 
     model_config = ConfigDict(extra="allow")
 
