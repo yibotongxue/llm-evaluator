@@ -42,7 +42,7 @@ eval_cfgs:
   # Benchmarks配置
   benchmarks:
     # Benchmark 1: 完全复用公共metrics配置
-    AdvBench:
+    AIME:
       data_cfgs:
         data_path: Maxwell-Jia/AIME_2024
         data_template: AIME

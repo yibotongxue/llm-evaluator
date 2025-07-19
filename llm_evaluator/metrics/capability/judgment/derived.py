@@ -12,12 +12,9 @@ class AIMECorrectJudgment(BaseCorrectJudgment):
 
     def judge(self, outputs: list[InferenceOutput]) -> list[bool]:
         for output in outputs:
-            if output.extracted_answer is None:
-                raise ValueError("Output does not contain an extracted answer.")
             if InferenceInput(**output.input).ref_answer is None:
                 raise ValueError("Input does not contain a reference answer.")
         return [
-            output.extracted_answer.strip()  # type: ignore [union-attr]
-            == InferenceInput(**output.input).ref_answer.strip()  # type: ignore [union-attr]
+            (output.extracted_answer and output.extracted_answer.strip() == InferenceInput(**output.input).ref_answer.strip())  # type: ignore [union-attr, misc]
             for output in outputs
         ]
