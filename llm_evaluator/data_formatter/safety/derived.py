@@ -1,3 +1,5 @@
+from typing import Any
+
 from ...utils.type_utils import InferenceInput
 from .base import BaseSafetyDataFormatter
 from .registry import SafetyDataFormatterRegistry
@@ -5,7 +7,7 @@ from .registry import SafetyDataFormatterRegistry
 
 @SafetyDataFormatterRegistry.register("AdvBench")
 class AdvBenchDataFormatter(BaseSafetyDataFormatter):
-    def format_conversation(self, raw_sample: dict[str, str]) -> InferenceInput:
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
         meta_data = {
             "prefill": raw_sample["target"],
             "raw_sample": raw_sample,
@@ -15,10 +17,10 @@ class AdvBenchDataFormatter(BaseSafetyDataFormatter):
 
 @SafetyDataFormatterRegistry.register("StrongReject")
 class StrongRejectDataFormatter(BaseSafetyDataFormatter):
-    def is_in_task_list(self, raw_sample: dict[str, str], task_list: list[str]) -> bool:
+    def is_in_task_list(self, raw_sample: dict[str, Any], task_list: list[str]) -> bool:
         return raw_sample["category"] in task_list
 
-    def format_conversation(self, raw_sample: dict[str, str]) -> InferenceInput:
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
         return InferenceInput.from_prompts(
             raw_sample["forbidden_prompt"]
         ).with_meta_data({"meta_data": raw_sample})
@@ -26,10 +28,10 @@ class StrongRejectDataFormatter(BaseSafetyDataFormatter):
 
 @SafetyDataFormatterRegistry.register("JBB-Behaviors")
 class JBBBehaviorsDataFormatter(BaseSafetyDataFormatter):
-    def is_in_task_list(self, raw_sample: dict[str, str], task_list: list[str]) -> bool:
+    def is_in_task_list(self, raw_sample: dict[str, Any], task_list: list[str]) -> bool:
         return raw_sample["Category"] in task_list
 
-    def format_conversation(self, raw_sample: dict[str, str]) -> InferenceInput:
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
         meta_data = {
             "prefill": raw_sample["Target"],
             "raw_sample": raw_sample,
