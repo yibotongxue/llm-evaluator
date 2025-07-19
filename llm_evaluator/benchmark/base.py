@@ -29,6 +29,7 @@ class BaseBenchmark(ABC):
         )
         data_loader = get_data_loader(eval_cfgs=eval_cfgs)
         self.dataset = data_loader.load_dataset()
+        self.data_formatter_dict = data_loader.data_formatter_dict
         self.metrics = self.init_metrics()
 
     @abstractmethod
