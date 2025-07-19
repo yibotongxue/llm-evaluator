@@ -9,5 +9,9 @@ def get_data_loader(eval_cfgs: dict[str, Any]) -> BaseBenchmarkDataLoader:
         from .safety import SafetyBenchmarkDataLoader
 
         return SafetyBenchmarkDataLoader(eval_cfgs)
+    elif benchmark_type == "capability":
+        from .capability import CapabilityBenchmarkDataLoader
+
+        return CapabilityBenchmarkDataLoader(eval_cfgs)
     else:
         raise ValueError(f"Unsupported benchmark type {benchmark_type}")
