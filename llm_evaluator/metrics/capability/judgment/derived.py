@@ -15,6 +15,10 @@ class AIMECorrectJudgment(BaseCorrectJudgment):
             if InferenceInput(**output.input).ref_answer is None:
                 raise ValueError("Input does not contain a reference answer.")
         return [
-            (output.extracted_answer and output.extracted_answer.strip() == InferenceInput(**output.input).ref_answer.strip())  # type: ignore [union-attr, misc]
+            (
+                output.extracted_answer is not None
+                and output.extracted_answer.strip()
+                == InferenceInput(**output.input).ref_answer.strip()  # type: ignore [union-attr]
+            )
             for output in outputs
         ]
