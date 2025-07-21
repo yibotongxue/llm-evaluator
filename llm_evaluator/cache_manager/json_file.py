@@ -38,7 +38,7 @@ class JSONFileCacheManager(BaseCacheManager):
                 )
                 continue  # 忽略损坏的文件
 
-    def load_cache(self, key: str) -> dict[str, Any] | None:
+    def _load_cache(self, key: str) -> dict[str, Any] | None:
         return self._memory_cache.get(key)
 
     def save_cache(self, key: str, value: dict[str, Any]) -> None:

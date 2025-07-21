@@ -13,7 +13,7 @@ class RedisCacheManager(BaseCacheManager):
         super().__init__(cache_cfgs=cache_cfgs)
         self.redis_client = redis.Redis(**cache_cfgs)
 
-    def load_cache(self, key: str) -> dict[str, Any] | None:
+    def _load_cache(self, key: str) -> dict[str, Any] | None:
         value = self.redis_client.get(key)
         if value is not None:
             # TODO 需要更仔细地检查加载的内容
