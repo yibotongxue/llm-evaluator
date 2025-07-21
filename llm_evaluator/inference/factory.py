@@ -36,9 +36,13 @@ class InferenceFactory:
         }
         cfgs_hash = dict_to_hash(cfgs_dict)
 
-        for k, v in cls._inference_pool.items():
-            if not k == cfgs_hash:
-                v.shutdown()
+        backend = model_cfgs.get("inference_backend")
+
+        # Shutdown previous instances if necessary
+        if backend in ["hf", "vllm"]:
+            for k, v in cls._inference_pool.items():
+                if not k == cfgs_hash:
+                    v.shutdown()
 
         if cfgs_hash in cls._inference_pool:
             return cls._inference_pool[cfgs_hash]
