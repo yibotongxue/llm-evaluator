@@ -1,9 +1,9 @@
 from .accuracy import *
 from .base import BaseMetricsComputer
+from .factory import get_metrics_computer
 from .pass_at_k import *
-from .registry import MetricsRegistry
 
 __all__ = [
     "BaseMetricsComputer",
-    "MetricsRegistry",
+    "get_metrics_computer",
 ]

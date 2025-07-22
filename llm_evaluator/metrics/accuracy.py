@@ -2,7 +2,7 @@ from typing import Any
 
 from ..utils.type_utils import InferenceOutput, MetricsOutput
 from .base import BaseMetricsComputer
-from .judgment import JudgmentRegistry
+from .judgment import get_judgment
 from .registry import MetricsRegistry
 
 
@@ -11,8 +11,7 @@ class AccuracyMetricsComputer(BaseMetricsComputer):
     def __init__(self, metrics_cfgs: dict[str, Any]):
         super().__init__(metrics_cfgs)
         judgment_cfgs: dict[str, Any] = metrics_cfgs.get("judgment_cfgs")  # type: ignore [assignment]
-        judgment_type = judgment_cfgs["judgment_type"]
-        self.judgment = JudgmentRegistry.get_by_name(judgment_type)(judgment_cfgs)
+        self.judgment = get_judgment(judgment_cfgs)
 
     def compute_metrics(self, outputs: list[list[InferenceOutput]]) -> MetricsOutput:
         for output_list in outputs:

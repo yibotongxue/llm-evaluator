@@ -2,7 +2,7 @@ from typing import Any
 
 from ..data.data_loader import BenchmarkDataLoader
 from ..inference import InferenceFactory
-from ..metrics import BaseMetricsComputer, MetricsRegistry
+from ..metrics import BaseMetricsComputer, get_metrics_computer
 from ..utils.type_utils import (
     EvalConfigs,
     EvaluateResult,
@@ -58,7 +58,7 @@ class Benchmark:
         self.metrics: dict[str, list[BaseMetricsComputer]] = {}
         for benchmark_name, benchmark_cfgs in self.eval_cfgs.benchmarks.items():
             self.metrics[benchmark_name] = [
-                MetricsRegistry.get_by_name(metrics_cfg["metrics_type"])(metrics_cfg)
+                get_metrics_computer(metrics_cfg)
                 for metrics_cfg in benchmark_cfgs.metrics_cfgs
             ]
 

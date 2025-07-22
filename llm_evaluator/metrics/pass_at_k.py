@@ -2,7 +2,7 @@ from typing import Any
 
 from ..utils.type_utils import InferenceOutput, InferSettings, MetricsOutput
 from .base import BaseMetricsComputer
-from .judgment import JudgmentRegistry
+from .judgment import get_judgment
 from .registry import MetricsRegistry
 
 
@@ -11,9 +11,7 @@ class PassAtKMetricsComputer(BaseMetricsComputer):
     def __init__(self, metrics_cfgs: dict[str, Any]):
         super().__init__(metrics_cfgs)
         judgment_cfgs: dict[str, Any] = metrics_cfgs.get("judgment_cfgs")  # type: ignore [assignment]
-        self.judgment = JudgmentRegistry.get_by_name(judgment_cfgs["type"])(
-            judgment_cfgs
-        )
+        self.judgment = get_judgment(judgment_cfgs)
         self.k = metrics_cfgs["k"]
 
     def infer_settings(self) -> InferSettings:
