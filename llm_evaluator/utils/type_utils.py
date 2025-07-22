@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, TypedDict
 
 from pydantic import BaseModel, ConfigDict
+
+from .logger import Logger, app_logger
 
 
 class CustomBaseModel(BaseModel):  # type: ignore [misc]
@@ -21,6 +23,7 @@ class InferenceInput(CustomBaseModel):
     prefilled: bool
     system_prompt: str
     ref_answer: str | None = None
+    repeat_idx: int = 0
     meta_data: dict[str, Any]
 
     model_config = ConfigDict(extra="allow")
@@ -38,6 +41,28 @@ class InferenceInput(CustomBaseModel):
             ],
             prefilled=False,
             system_prompt=system_prompt,
+            meta_data={},
+        )
+
+    @classmethod
+    def from_output(
+        cls, output: InferenceOutput, logger: Logger | None = None
+    ) -> InferenceInput:
+        conversation = InferenceInput(**output.input).conversation.copy()
+        if conversation[0]["role"] == "system":
+            conversation.pop(0)
+        if conversation[-1]["role"] == "assistant":
+            if logger is None:
+                logger = app_logger
+            logger.warning(
+                f"The last turn of conversation is assistant.\nThe details is {conversation[-1]}. We will remove it"
+            )
+            conversation.pop()
+        conversation.append({"role": "assistant", "content": output.response})
+        return InferenceInput(
+            conversation=conversation,
+            prefilled=False,
+            system_prompt="",
             meta_data={},
         )
 
@@ -79,6 +104,13 @@ class InferenceInput(CustomBaseModel):
         }
         return InferenceInput(**raw)
 
+    def with_repeat_idx(self, repeat_idx: int) -> InferenceInput:
+        raw = {
+            **self.model_dump(),
+            "repeat_idx": repeat_idx,
+        }
+        return InferenceInput(**raw)
+
 
 class InferenceOutput(CustomBaseModel):
     response: str
@@ -89,11 +121,18 @@ class InferenceOutput(CustomBaseModel):
 
     model_config = ConfigDict(extra="allow")
 
+    def with_extracted_answer(self, extracted_answer: str | None) -> InferenceOutput:
+        raw = {
+            **self.model_dump(),
+            "extracted_answer": extracted_answer,
+        }
+        return InferenceOutput(**raw)
+
 
 class MetricsOutput(CustomBaseModel):
     metrics_name: str
     metrics: float
-    meta_data: dict[str, Any] | list[dict[str, Any]]
+    meta_data: dict[str, Any]
 
 
 class EvaluateResult(CustomBaseModel):
@@ -114,6 +153,11 @@ class EvalConfigs(CustomBaseModel):
     attack_cfgs: list[dict[str, Any]] | None = None
 
     model_config = ConfigDict(extra="allow")
+
+
+class InferSettings(TypedDict):
+    repeat_cnt: int
+    prompt_template: str | None
 
 
 def to_dict(obj: BaseModel | dict[str, Any]) -> dict[str, Any]:

@@ -17,7 +17,7 @@ class BaseApiLLMInference(BaseInference):
         self.max_workers: int = self.inference_cfgs.pop("max_workers", 32)
         self.sleep_seconds: int = self.inference_cfgs.pop("sleep_seconds", 30)
 
-    def generate(
+    def _generate(
         self,
         inputs: list[InferenceInput],
         enable_tqdm: bool = False,

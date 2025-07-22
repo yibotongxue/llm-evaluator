@@ -64,7 +64,7 @@ class VllmInference(BaseInference):
             prompts.append(prompt)
         return prompts
 
-    def generate(
+    def _generate(
         self,
         inputs: list[InferenceInput],
         enable_tqdm: bool = False,
@@ -172,7 +172,7 @@ def main() -> None:
         ),
     ]
 
-    outputs = inference.generate(
+    outputs = inference._generate(
         inference_input,
         enable_tqdm=True,
         tqdm_args={"desc": "Generating responses using huggingface transformers"},

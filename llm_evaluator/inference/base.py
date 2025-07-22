@@ -5,14 +5,51 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Any, ContextManager
 
+from ..prompts import PromptBuilderRegistry
 from ..utils.shutdownable import Shutdownable
 from ..utils.tools import dict_to_hash
 from ..utils.type_utils import InferenceInput, InferenceOutput
 
 
 class InferenceInterface(ABC):
-    @abstractmethod
     def generate(
+        self,
+        inputs: list[InferenceInput],
+        *,
+        repeat_cnt: int = 1,
+        prompt_template: str | None = None,
+        enable_tqdm: bool = False,
+        tqdm_args: dict[str, Any] | None = None,
+    ) -> list[list[InferenceOutput]]:
+        if prompt_template is not None:
+            prompt_builder = PromptBuilderRegistry.get_by_name(prompt_template)()
+            inputs = inputs.copy()
+            for input in inputs:
+                last_user_message = input.conversation[-1]
+                if input.prefilled:
+                    last_user_message = input.conversation[-2]
+                last_user_message["content"] = prompt_builder.build_prompt(
+                    last_user_message["content"]
+                )
+        repeat_inputs = [
+            input.with_repeat_idx(repeat_idx)
+            for repeat_idx in range(repeat_cnt)
+            for input in inputs
+        ]
+        outputs = self._generate(
+            repeat_inputs, enable_tqdm=enable_tqdm, tqdm_args=tqdm_args
+        )
+        outputs = [
+            output.with_extracted_answer(prompt_builder.extract_answer(output.response))
+            for output in outputs
+        ]
+        grouped_outputs = [
+            outputs[i : i + repeat_cnt] for i in range(0, len(outputs), repeat_cnt)
+        ]
+        return grouped_outputs
+
+    @abstractmethod
+    def _generate(
         self,
         inputs: list[InferenceInput],
         enable_tqdm: bool = False,

@@ -35,7 +35,7 @@ class HuggingFaceInference(BaseInference):
         self.offset = model_cfgs.get("offset", 5)
         self.inference_batch_size = inference_cfgs.get("inference_batch_size", 32)
 
-    def generate(
+    def _generate(
         self,
         inputs: list[InferenceInput],
         enable_tqdm: bool = False,
@@ -197,7 +197,7 @@ def main() -> None:
         ),
     ]
 
-    outputs = inference.generate(
+    outputs = inference._generate(
         inference_input,
         enable_tqdm=True,
         tqdm_args={"desc": "Generating responses using huggingface transformers"},

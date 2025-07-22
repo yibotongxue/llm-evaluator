@@ -16,7 +16,7 @@ class CachedInference(InferenceInterface):
         self.cache_manager = cache_manager
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
 
-    def generate(
+    def _generate(
         self,
         inputs: list[InferenceInput],
         enable_tqdm: bool = False,
@@ -36,7 +36,7 @@ class CachedInference(InferenceInterface):
         non_cached_inputs = [
             input for i, input in enumerate(inputs) if i not in cached_input_indices
         ]
-        non_cached_outputs = self.inference.generate(
+        non_cached_outputs = self.inference._generate(
             non_cached_inputs, enable_tqdm, tqdm_args
         )
         for input, output in zip(non_cached_inputs, non_cached_outputs):
@@ -65,5 +65,6 @@ class CachedInference(InferenceInterface):
             "conversation": inference_input.conversation,
             "cfgs_hash": self.inference.cfgs_hash,
             "prefilled": inference_input.prefilled,
+            "repeat_idx": inference_input.repeat_idx,
         }
         return dict_to_hash(key_message)

@@ -1,0 +1,59 @@
+from typing import Any
+
+from ...inference import InferenceFactory, InferenceInterface
+from ...prompts import PromptBuilderRegistry
+from ...prompts.judgment import JudgmentPromptBuilder
+from ...utils.type_utils import InferenceInput, InferenceOutput
+from .base import BaseJudgment
+from .registry import JudgmentRegistry
+
+
+@JudgmentRegistry.register("LLM")
+class LLMJudgment(BaseJudgment):
+    def __init__(self, judgment_cfgs: dict[str, Any]):
+        super().__init__(judgment_cfgs=judgment_cfgs)
+        self.model_cfgs: dict[str, Any] = self.judgment_cfgs.get("model_cfgs")  # type: ignore [assignment]
+        self.inference_cfgs: dict[str, Any] = self.judgment_cfgs.get("inference_cfgs")  # type: ignore [assignment]
+        self.cache_cfgs: dict[str, Any] | None = self.judgment_cfgs.get(
+            "cache_cfgs", None
+        )
+        self.prompt_builder_type = self.inference_cfgs.pop("prompt_builder_type")
+        self._verify_prompt_type(self.prompt_builder_type)
+        self.inference: InferenceInterface | None = None
+
+    def judge(
+        self, outputs: list[InferenceOutput]
+    ) -> list[tuple[bool, dict[str, Any]]]:
+        if self.inference is None:
+            self.inference = InferenceFactory.get_inference_instance(
+                model_cfgs=self.model_cfgs,
+                inference_cfgs=self.inference_cfgs,
+                cache_cfgs=self.cache_cfgs,
+            )
+        inputs = [InferenceInput.from_output(output) for output in outputs]
+        judgments = self.inference.generate(
+            inputs=inputs,
+            repeat_cnt=1,
+            prompt_template=self.prompt_builder_type,
+            enable_tqdm=True,
+            tqdm_args={"desc": "Judging outputs"},
+        )
+        return [
+            (
+                self._answer_to_boolean(judgment[0].extracted_answer),
+                {"raw_output": judgment[0].response},
+            )
+            for judgment in judgments
+        ]
+
+    def _verify_prompt_type(self, prompt_type: str) -> None:
+        prompt_builder = PromptBuilderRegistry.get_by_name(prompt_type)()
+        if not isinstance(prompt_builder, JudgmentPromptBuilder):
+            raise ValueError(
+                f"Prompt builder type '{prompt_type}' is not a valid JudgmentPromptBuilder."
+            )
+
+    def _answer_to_boolean(self, answer: str | None) -> bool:
+        if answer is None:
+            return False
+        return answer.strip().lower() == "true"

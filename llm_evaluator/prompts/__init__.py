@@ -1,5 +1,7 @@
 from .base import BasePromptBuilder
-from .derived import *
+from .capability import *
+from .correct_judgment import *
+from .judgment import *
 from .registry import PromptBuilderRegistry
 
 __all__ = [
