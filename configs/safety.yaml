@@ -29,6 +29,13 @@ _common: &common_base
       force_update: false
     prompt_builder_type: LlamaGuard
 
+  # 公共metrics配置锚点
+  metrics:
+    - &accuracy_metrics
+      metrics_type: Accuracy
+      metrics_name: ASR
+      judgment_cfgs: *common_judgment
+
 model_cfgs:
   model_name_or_path: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
   inference_backend: vllm
@@ -53,13 +60,6 @@ cache_cfgs:
   cache_dir: ./cache/inference
   flush_threshold: 10
   force_update: false
-
-  # 公共metrics配置锚点
-  metrics:
-    - &accuracy_metrics
-      metrics_type: Accuracy
-      metrics_name: ASR
-      judgment_cfgs: *common_judgment
 
 eval_cfgs:
   output_dir: ./output

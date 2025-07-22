@@ -11,7 +11,7 @@ class AccuracyMetricsComputer(BaseMetricsComputer):
     def __init__(self, metrics_cfgs: dict[str, Any]):
         super().__init__(metrics_cfgs)
         judgment_cfgs: dict[str, Any] = metrics_cfgs.get("judgment_cfgs")  # type: ignore [assignment]
-        judgment_type = metrics_cfgs["judgment_type"]
+        judgment_type = judgment_cfgs["judgment_type"]
         self.judgment = JudgmentRegistry.get_by_name(judgment_type)(judgment_cfgs)
 
     def compute_metrics(self, outputs: list[list[InferenceOutput]]) -> MetricsOutput:
