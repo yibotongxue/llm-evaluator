@@ -3,7 +3,12 @@ from typing import Any
 from ..data.data_loader import BenchmarkDataLoader
 from ..inference import InferenceFactory
 from ..metrics import BaseMetricsComputer, MetricsRegistry
-from ..utils.type_utils import EvalConfigs, EvaluateResult, MetricsOutput
+from ..utils.type_utils import (
+    EvalConfigs,
+    EvaluateResult,
+    InferenceOutput,
+    MetricsOutput,
+)
 
 
 class Benchmark:
@@ -57,6 +62,31 @@ class Benchmark:
                 for metrics_cfg in benchmark_cfgs.metrics_cfgs
             ]
 
+    def inference(self) -> dict[tuple[str, str], list[list[InferenceOutput]]]:
+        """
+        执行模型推理
+
+        对每个基准测试的数据集进行模型推理，并返回推理结果
+
+        返回
+        ----
+        dict[tuple[str, str], list[InferenceOutput]]
+            包含每个基准测试和指标名称对应的推理结果列表的字典
+        """
+        inference_results: dict[tuple[str, str], list[list[InferenceOutput]]] = {}
+        for benchmark_name, inputs in self.dataset.items():
+            for metrics_computer in self.metrics[benchmark_name]:
+                outputs = self.model.generate(
+                    inputs,
+                    **metrics_computer.infer_settings(),
+                    enable_tqdm=True,
+                    tqdm_args={"desc": f"Generating outputs for {benchmark_name}"},
+                )
+                inference_results[(benchmark_name, metrics_computer.metrics_name)] = (
+                    outputs
+                )
+        return inference_results
+
     def evaluate(self) -> dict[str, EvaluateResult]:
         """
         执行评估过程
@@ -68,17 +98,13 @@ class Benchmark:
         dict[str, EvaluateResult]
             包含各基准测试评估结果的字典
         """
+        outputs = self.inference()
         result: dict[str, EvaluateResult] = {}
-        for benchmark_name, inputs in self.dataset.items():
+        for benchmark_name in self.dataset.keys():
             metrics_result: list[MetricsOutput] = []
             for metrics_computer in self.metrics[benchmark_name]:
-                outputs = self.model.generate(
-                    inputs,
-                    **metrics_computer.infer_settings(),
-                    enable_tqdm=True,
-                    tqdm_args={"desc": f"Computing metrics for {benchmark_name}"},
-                )
-                metrics_output = metrics_computer.compute_metrics(outputs)
+                output = outputs[(benchmark_name, metrics_computer.metrics_name)]
+                metrics_output = metrics_computer.compute_metrics(output)
                 metrics_result.append(metrics_output)
             result[benchmark_name] = EvaluateResult(
                 metrics=metrics_result,
