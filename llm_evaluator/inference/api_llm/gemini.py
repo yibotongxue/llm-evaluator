@@ -11,6 +11,19 @@ from .base import BaseApiLLMInference
 
 
 class GeminiApiLLMInference(BaseApiLLMInference):
+    """
+    Google Gemini API接口的推理实现
+
+    支持Google Gemini API接口协议的模型推理
+
+    参数
+    ----
+    model_cfgs : dict[str, Any]
+        模型配置参数，必须包含'model_name_or_path'和'api_key'
+    inference_cfgs : dict[str, Any]
+        推理配置参数
+    """
+
     def __init__(
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:

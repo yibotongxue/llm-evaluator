@@ -7,6 +7,12 @@ from .cached import CachedInference
 
 
 class InferenceFactory:
+    """
+    推理实例工厂类
+
+    负责创建、缓存和管理推理实例，实现单例模式以避免重复创建相同配置的实例
+    """
+
     _inference_pool: dict[str, BaseInference] = {}
 
     @classmethod
@@ -16,6 +22,23 @@ class InferenceFactory:
         inference_cfgs: dict[str, Any],
         cache_cfgs: dict[str, Any] | None,
     ) -> InferenceInterface:
+        """
+        获取推理实例
+
+        参数
+        ----
+        model_cfgs : dict[str, Any]
+            模型配置参数
+        inference_cfgs : dict[str, Any]
+            推理配置参数
+        cache_cfgs : dict[str, Any] | None
+            缓存配置参数，如果为None则不启用缓存
+
+        返回
+        ----
+        InferenceInterface
+            推理实例，如果提供了缓存配置则返回带缓存功能的实例
+        """
         instance = cls._get_inference_instance(
             model_cfgs=model_cfgs, inference_cfgs=inference_cfgs
         )
@@ -30,6 +53,26 @@ class InferenceFactory:
         model_cfgs: dict[str, Any],
         inference_cfgs: dict[str, Any],
     ) -> BaseInference:
+        """
+        获取或创建推理实例（内部方法）
+
+        参数
+        ----
+        model_cfgs : dict[str, Any]
+            模型配置参数
+        inference_cfgs : dict[str, Any]
+            推理配置参数
+
+        返回
+        ----
+        BaseInference
+            推理实例
+
+        异常
+        ----
+        ValueError
+            当指定的推理后端不受支持时抛出
+        """
         cfgs_dict = {
             "model_cfgs": model_cfgs.copy(),
             "inference_cfgs": inference_cfgs.copy(),

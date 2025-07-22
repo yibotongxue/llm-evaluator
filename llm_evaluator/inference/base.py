@@ -5,13 +5,19 @@ from collections.abc import Callable
 from contextlib import AbstractContextManager
 from typing import Any, ContextManager
 
-from ..prompts import PromptBuilderRegistry
+from ..prompts import BasePromptBuilder, PromptBuilderRegistry
 from ..utils.shutdownable import Shutdownable
 from ..utils.tools import dict_to_hash
 from ..utils.type_utils import InferenceInput, InferenceOutput
 
 
 class InferenceInterface(ABC):
+    """
+    推理接口的抽象基类
+
+    定义了模型推理的基本接口，提供了生成结果、更新配置等通用功能
+    """
+
     def generate(
         self,
         inputs: list[InferenceInput],
@@ -21,8 +27,32 @@ class InferenceInterface(ABC):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[list[InferenceOutput]]:
+        """
+        生成推理结果
+
+        参数
+        ----
+        inputs : list[InferenceInput]
+            输入数据列表
+        repeat_cnt : int, 默认为1
+            每个输入重复推理的次数
+        prompt_template : str | None, 默认为None
+            提示模板名称，用于构建或修改提示
+        enable_tqdm : bool, 默认为False
+            是否显示进度条
+        tqdm_args : dict[str, Any] | None, 默认为None
+            进度条的参数配置
+
+        返回
+        ----
+        list[list[InferenceOutput]]
+            每个输入对应的推理结果列表，内层列表包含重复次数的结果
+        """
+        prompt_builder: BasePromptBuilder | None = None
         if prompt_template is not None:
             prompt_builder = PromptBuilderRegistry.get_by_name(prompt_template)()
+
+        if prompt_builder is not None:
             inputs = inputs.copy()
             for input in inputs:
                 last_user_message = input.conversation[-1]
@@ -39,10 +69,13 @@ class InferenceInterface(ABC):
         outputs = self._generate(
             repeat_inputs, enable_tqdm=enable_tqdm, tqdm_args=tqdm_args
         )
-        outputs = [
-            output.with_extracted_answer(prompt_builder.extract_answer(output.response))
-            for output in outputs
-        ]
+        if prompt_builder is not None:
+            outputs = [
+                output.with_extracted_answer(
+                    prompt_builder.extract_answer(output.response)
+                )
+                for output in outputs
+            ]
         grouped_outputs = [
             outputs[i : i + repeat_cnt] for i in range(0, len(outputs), repeat_cnt)
         ]
@@ -55,21 +88,74 @@ class InferenceInterface(ABC):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
-        pass
+        """
+        内部生成方法，由子类实现
+
+        参数
+        ----
+        inputs : list[InferenceInput]
+            输入数据列表
+        enable_tqdm : bool, 默认为False
+            是否显示进度条
+        tqdm_args : dict[str, Any] | None, 默认为None
+            进度条的参数配置
+
+        返回
+        ----
+        list[InferenceOutput]
+            推理结果列表
+
+        注意
+        ----
+        此方法必须由子类实现
+        """
 
     def update_inference_cfgs(
         self, new_inference_cfgs: dict[str, Any]
     ) -> ContextManager[InferenceInterface]:
+        """
+        临时更新推理配置
+
+        参数
+        ----
+        new_inference_cfgs : dict[str, Any]
+            新的推理配置参数
+
+        返回
+        ----
+        ContextManager[InferenceInterface]
+            上下文管理器，用于临时应用配置并在退出时恢复原配置
+        """
         return self._TempConfigUpdater(self, new_inference_cfgs)
 
     @abstractmethod
     def _update_inference_cfgs(
         self, new_inference_cfgs: dict[str, Any]
     ) -> Callable[[], None]:
-        pass
+        """
+        内部更新配置方法，由子类实现
+
+        参数
+        ----
+        new_inference_cfgs : dict[str, Any]
+            新的推理配置参数
+
+        返回
+        ----
+        Callable[[], None]
+            用于恢复原始配置的函数
+
+        注意
+        ----
+        此方法必须由子类实现
+        """
 
     class _TempConfigUpdater(AbstractContextManager["InferenceInterface"]):
-        """内部上下文管理器类，处理配置的临时更新和恢复"""
+        """
+        内部上下文管理器类，处理配置的临时更新和恢复
+
+        用于在上下文范围内临时修改推理配置，退出上下文后自动恢复原配置
+        """
 
         def __init__(
             self, owner: InferenceInterface, new_inference_cfgs: dict[str, Any]
@@ -95,6 +181,19 @@ class InferenceInterface(ABC):
 
 
 class BaseInference(InferenceInterface, Shutdownable):
+    """
+    基础推理实现类
+
+    实现了推理接口的基本功能，提供配置管理、哈希计算等通用功能
+
+    参数
+    ----
+    model_cfgs : dict[str, Any]
+        模型配置参数
+    inference_cfgs : dict[str, Any]
+        推理配置参数
+    """
+
     def __init__(
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
@@ -109,6 +208,19 @@ class BaseInference(InferenceInterface, Shutdownable):
     def _update_inference_cfgs(
         self, new_inference_cfgs: dict[str, Any]
     ) -> Callable[[], None]:
+        """
+        更新推理配置并返回恢复函数
+
+        参数
+        ----
+        new_inference_cfgs : dict[str, Any]
+            新的推理配置参数
+
+        返回
+        ----
+        Callable[[], None]
+            用于恢复原始配置的函数
+        """
         self.original_inference_cfgs = self.inference_cfgs.copy()
         self.original_cfgs_hash = self._cfgs_hash
         self.inference_cfgs.update(new_inference_cfgs)

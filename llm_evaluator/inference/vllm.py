@@ -13,6 +13,19 @@ from .base import BaseInference
 
 
 class VllmInference(BaseInference):
+    """
+    基于vLLM的推理实现
+
+    使用vLLM库加载和运行大语言模型，提供更高效的推理性能
+
+    参数
+    ----
+    model_cfgs : dict[str, Any]
+        模型配置参数，必须包含'model_name_or_path'
+    inference_cfgs : dict[str, Any]
+        推理配置参数
+    """
+
     def __init__(
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
@@ -34,7 +47,19 @@ class VllmInference(BaseInference):
         self.logger.info(f"Sampling parameters: {self.sampling_params}")
 
     def _prepare_prompts(self, inputs: list[InferenceInput]) -> list[str]:
-        """将输入转换为vLLM所需的提示格式"""
+        """
+        将输入转换为vLLM所需的提示格式
+
+        参数
+        ----
+        inputs : list[InferenceInput]
+            输入数据列表
+
+        返回
+        ----
+        list[str]
+            格式化后的提示字符串列表
+        """
         if self.llm is None:
             self.llm = LLM(model=self.model_name, **self.vllm_init_args)
             self.tokenizer = self.llm.get_tokenizer()

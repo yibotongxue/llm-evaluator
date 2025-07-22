@@ -10,6 +10,18 @@ from .base import BaseApiLLMInference
 
 
 class AnthropicApiLLMInference(BaseApiLLMInference):
+    """
+    Anthropic Claude API接口的推理实现
+
+    支持Anthropic API接口协议的模型推理，包括Claude系列及兼容接口
+
+    参数
+    ----
+    model_cfgs : dict[str, Any]
+        模型配置参数，必须包含'model_name_or_path'和'api_key'
+    inference_cfgs : dict[str, Any]
+        推理配置参数，可包含max_tokens等
+    """
 
     _BASE_URL_MAP: dict[str, str] = {
         "kimi-k2-0711-preview": "https://api.moonshot.cn/anthropic",
@@ -75,4 +87,14 @@ class AnthropicApiLLMInference(BaseApiLLMInference):
 
     @classmethod
     def register_model(cls, model_name: str, base_url: str) -> None:
+        """
+        注册新的模型与基础URL映射
+
+        参数
+        ----
+        model_name : str
+            模型名称
+        base_url : str
+            API基础URL
+        """
         cls._BASE_URL_MAP[model_name] = base_url

@@ -8,11 +8,33 @@ from .data_formatter import BaseDataFormatter, DataFormatterRegistry
 
 
 class BenchmarkDataLoader:
+    """
+    基准测试数据加载器。
+
+    用于加载和格式化基准测试数据集，以便进行模型评估。
+    """
+
     def __init__(self, eval_cfgs: dict[str, Any]):
+        """
+        初始化基准测试数据加载器。
+
+        参数
+        ----------
+        eval_cfgs : dict[str, Any]
+            评估配置字典
+        """
         self.eval_cfgs = EvalConfigs(**eval_cfgs)
         self.benchmarks = self.eval_cfgs.benchmarks
 
     def load_dataset(self) -> dict[str, list[InferenceInput]]:
+        """
+        加载所有基准测试数据集。
+
+        返回
+        -------
+        dict[str, list[InferenceInput]]
+            包含所有基准测试数据的字典，键为基准测试名称，值为推理输入列表
+        """
         return {
             benchmark_name: self.load_benchmark_dataset(benchmark_name, benchmark_cfgs)
             for benchmark_name, benchmark_cfgs in self.benchmarks.items()
@@ -20,6 +42,14 @@ class BenchmarkDataLoader:
 
     @cached_property
     def data_formatter_dict(self) -> dict[str, BaseDataFormatter]:
+        """
+        获取数据格式化器字典。
+
+        返回
+        -------
+        dict[str, BaseDataFormatter]
+            包含所有数据格式化器的字典，键为基准测试名称，值为对应的数据格式化器
+        """
         return {
             benchmark_name: self.get_data_formatter(benchmark_cfgs)
             for benchmark_name, benchmark_cfgs in self.benchmarks.items()
@@ -28,6 +58,21 @@ class BenchmarkDataLoader:
     def load_benchmark_dataset(
         self, benchmark_name: str, benchmark_cfgs: BenchmarkConfigs
     ) -> list[InferenceInput]:
+        """
+        加载特定基准测试数据集。
+
+        参数
+        ----------
+        benchmark_name : str
+            基准测试名称
+        benchmark_cfgs : BenchmarkConfigs
+            基准测试配置
+
+        返回
+        -------
+        list[InferenceInput]
+            推理输入列表
+        """
         data_cfgs = benchmark_cfgs.data_cfgs
 
         data_formatter = self.data_formatter_dict[benchmark_name]
@@ -54,6 +99,19 @@ class BenchmarkDataLoader:
         return raw_samples
 
     def get_data_formatter(self, benchmark_cfgs: BenchmarkConfigs) -> BaseDataFormatter:
+        """
+        获取数据格式化器。
+
+        参数
+        ----------
+        benchmark_cfgs : BenchmarkConfigs
+            基准测试配置
+
+        返回
+        -------
+        BaseDataFormatter
+            数据格式化器实例
+        """
         data_cfgs = benchmark_cfgs.data_cfgs
 
         template: str = data_cfgs.get("data_template", "default")

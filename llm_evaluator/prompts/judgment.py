@@ -14,7 +14,7 @@ class JudgmentPromptBuilder(BasePromptBuilder):
 
 
 @PromptBuilderRegistry.register("LlamaGuard")
-class LlamaGuardPromptBuilder(BasePromptBuilder):
+class LlamaGuardPromptBuilder(JudgmentPromptBuilder):
     def build_prompt(self, raw_prompt: str) -> str:
         return raw_prompt
 

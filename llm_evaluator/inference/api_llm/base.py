@@ -9,6 +9,19 @@ from ..base import BaseInference
 
 
 class BaseApiLLMInference(BaseInference):
+    """
+    API调用型大语言模型推理基类
+
+    为通过API调用大语言模型提供基础功能，包括重试、并行处理等
+
+    参数
+    ----
+    model_cfgs : dict[str, Any]
+        模型配置参数
+    inference_cfgs : dict[str, Any]
+        推理配置参数，可包含max_retry, max_workers, sleep_seconds等
+    """
+
     def __init__(
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
@@ -35,6 +48,23 @@ class BaseApiLLMInference(BaseInference):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
+        """
+        并行执行多个推理请求
+
+        参数
+        ----
+        inputs : list[InferenceInput]
+            输入数据列表
+        enable_tqdm : bool, 默认为False
+            是否显示进度条
+        tqdm_args : dict[str, Any] | None, 默认为None
+            进度条的参数配置
+
+        返回
+        ----
+        list[InferenceOutput]
+            推理结果列表
+        """
         for inference_input in inputs:
             if inference_input.prefilled:
                 # TODO 需要设计更好的预填充方案
@@ -67,4 +97,20 @@ class BaseApiLLMInference(BaseInference):
 
     @abstractmethod
     def _single_generate(self, inference_input: InferenceInput) -> InferenceOutput:
-        pass
+        """
+        处理单个推理请求
+
+        参数
+        ----
+        inference_input : InferenceInput
+            单个输入数据
+
+        返回
+        ----
+        InferenceOutput
+            推理结果
+
+        注意
+        ----
+        此方法必须由子类实现
+        """

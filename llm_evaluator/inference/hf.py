@@ -18,6 +18,19 @@ from .base import BaseInference
 
 
 class HuggingFaceInference(BaseInference):
+    """
+    基于HuggingFace的推理实现
+
+    使用Transformers库加载和运行HuggingFace模型
+
+    参数
+    ----
+    model_cfgs : dict[str, Any]
+        模型配置参数，必须包含'model_name_or_path'
+    inference_cfgs : dict[str, Any]
+        推理配置参数
+    """
+
     def __init__(
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
@@ -41,6 +54,23 @@ class HuggingFaceInference(BaseInference):
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[InferenceOutput]:
+        """
+        执行模型推理
+
+        参数
+        ----
+        inputs : list[InferenceInput]
+            输入数据列表
+        enable_tqdm : bool, 默认为False
+            是否显示进度条
+        tqdm_args : dict[str, Any] | None, 默认为None
+            进度条的参数配置
+
+        返回
+        ----
+        list[InferenceOutput]
+            推理结果列表
+        """
         if len(inputs) == 0:
             return []
         if self.model is None:

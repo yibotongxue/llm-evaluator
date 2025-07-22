@@ -7,13 +7,31 @@ from ..utils.type_utils import EvalConfigs, EvaluateResult, MetricsOutput
 
 
 class Benchmark:
+    """
+    基准测试类，用于评估LLM模型性能
+    """
+
     def __init__(
         self,
         eval_cfgs: dict[str, Any],
         model_cfgs: dict[str, Any],
         inference_cfgs: dict[str, Any],
-        cache_cfgs: dict[str, Any] | None,
+        cache_cfgs: dict[str, Any] | None = None,
     ):
+        """
+        初始化基准测试类
+
+        参数
+        ----
+        eval_cfgs : dict[str, Any]
+            评估配置信息
+        model_cfgs : dict[str, Any]
+            模型配置信息
+        inference_cfgs : dict[str, Any]
+            推理配置信息
+        cache_cfgs : dict[str, Any] | None
+            缓存配置信息，可选
+        """
         self.eval_cfgs = EvalConfigs(**eval_cfgs)
         self.attack_cfgs = self.eval_cfgs.attack_cfgs
         self.model_cfgs = model_cfgs
@@ -27,6 +45,11 @@ class Benchmark:
         self.init_metrics()
 
     def init_metrics(self) -> None:
+        """
+        初始化评估指标
+
+        根据评估配置创建相应的评估指标计算器
+        """
         self.metrics: dict[str, list[BaseMetricsComputer]] = {}
         for benchmark_name, benchmark_cfgs in self.eval_cfgs.benchmarks.items():
             self.metrics[benchmark_name] = [
@@ -35,6 +58,16 @@ class Benchmark:
             ]
 
     def evaluate(self) -> dict[str, EvaluateResult]:
+        """
+        执行评估过程
+
+        对每个基准测试的数据集进行模型推理并计算评估指标
+
+        返回
+        ----
+        dict[str, EvaluateResult]
+            包含各基准测试评估结果的字典
+        """
         result: dict[str, EvaluateResult] = {}
         for benchmark_name, inputs in self.dataset.items():
             metrics_result: list[MetricsOutput] = []
