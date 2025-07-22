@@ -119,7 +119,7 @@ class CachedInference(InferenceInterface):
         key_message = {
             "system_prompt": inference_input.system_prompt,
             "conversation": inference_input.conversation,
-            "cfgs_hash": self.inference.cfgs_hash,
+            "cfgs_hash": self.inference.inference_essential_cfgs_hash,
             "prefilled": inference_input.prefilled,
             "repeat_idx": inference_input.repeat_idx,
         }

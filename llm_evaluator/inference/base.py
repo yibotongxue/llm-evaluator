@@ -204,6 +204,9 @@ class BaseInference(InferenceInterface, Shutdownable):
         self._cfgs_hash = dict_to_hash(cfgs_dict)
         self.model_cfgs = model_cfgs
         self.inference_cfgs = inference_cfgs
+        self._inference_essential_cfgs_hash = dict_to_hash(
+            self._get_inference_essential_cfgs()
+        )
 
     def _update_inference_cfgs(
         self, new_inference_cfgs: dict[str, Any]
@@ -241,3 +244,21 @@ class BaseInference(InferenceInterface, Shutdownable):
     @property
     def cfgs_hash(self) -> str:
         return self._cfgs_hash
+
+    @property
+    def inference_essential_cfgs_hash(self) -> str:
+        return self._inference_essential_cfgs_hash
+
+    def _get_inference_essential_cfgs(self) -> dict[str, Any]:
+        """
+        获取推理的基本配置
+
+        返回
+        ----
+        dict[str, Any]
+            包含模型和推理配置的字典
+        """
+        return {
+            "model_cfgs": self.model_cfgs,
+            "inference_cfgs": self.inference_cfgs,
+        }
