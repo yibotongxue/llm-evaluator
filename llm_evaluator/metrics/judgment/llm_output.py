@@ -17,7 +17,7 @@ class LLMJudgment(BaseJudgment):
         self.cache_cfgs: dict[str, Any] | None = self.judgment_cfgs.get(
             "cache_cfgs", None
         )
-        self.prompt_builder_type = self.inference_cfgs.pop("prompt_builder_type")
+        self.prompt_builder_type = self.judgment_cfgs["prompt_builder_type"]
         self._verify_prompt_type(self.prompt_builder_type)
         self.inference: InferenceInterface | None = None
 

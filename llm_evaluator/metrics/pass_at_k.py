@@ -6,7 +6,7 @@ from .judgment import JudgmentRegistry
 from .registry import MetricsRegistry
 
 
-@MetricsRegistry.register("Pass@K")
+@MetricsRegistry.register("PassAtK")
 class PassAtKMetricsComputer(BaseMetricsComputer):
     def __init__(self, metrics_cfgs: dict[str, Any]):
         super().__init__(metrics_cfgs)

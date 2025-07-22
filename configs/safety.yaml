@@ -1,5 +1,36 @@
+# 公共配置定义
+_common: &common_base
+
+  # 公共judgment配置锚点
+  judgment: &common_judgment
+    judgment_type: LLM
+    model_cfgs:
+      inference_backend: vllm
+      model_name_or_path: meta-llama/Llama-Guard-3-8B
+      vllm_init_args:
+        tensor_parallel_size: 4
+        dtype: bfloat16
+        max_model_len: 8192
+        max_num_seqs: 64
+        gpu_memory_utilization: 0.9
+        enable_prefix_caching: true
+    inference_cfgs:
+      sampling_params:
+        temperature: 0.0
+        top_k: 1
+        top_p: 1.0
+        max_tokens: 10
+        skip_special_tokens: true
+        stop: ["<|endoftext|>"]
+    cache_cfgs:
+      cache_type: json_file
+      cache_dir: ./cache/judgment_inference
+      flush_threshold: 10
+      force_update: false
+    prompt_builder_type: LlamaGuard
+
 model_cfgs:
-  model_name_or_path: deepseek-ai/DeepSeek-R1-Distill-Qwen-7B
+  model_name_or_path: deepseek-ai/DeepSeek-R1-Distill-Qwen-1.5B
   inference_backend: vllm
   vllm_init_args:
     tensor_parallel_size: 4
@@ -21,46 +52,18 @@ cache_cfgs:
   cache_type: json_file
   cache_dir: ./cache/inference
   flush_threshold: 10
+  force_update: false
+
+  # 公共metrics配置锚点
+  metrics:
+    - &accuracy_metrics
+      metrics_type: Accuracy
+      metrics_name: ASR
+      judgment_cfgs: *common_judgment
 
 eval_cfgs:
   output_dir: ./output
   benchmark_type: safety
-
-  # 公共配置定义
-  _common: &common_base
-
-    # 公共judgment配置锚点
-    judgment: &common_judgment
-      judgment_type: LLM
-      model_cfgs:
-        inference_backend: vllm
-        model_name_or_path: meta-llama/Llama-Guard-3-8B
-        vllm_init_args:
-          tensor_parallel_size: 4
-          dtype: bfloat16
-          max_model_len: 8192
-          max_num_seqs: 64
-          gpu_memory_utilization: 0.9
-          enable_prefix_caching: true
-      inference_cfgs:
-        prompt_builder_type: LlamaGuard
-        sampling_params:
-          temperature: 0.0
-          top_k: 1
-          top_p: 1.0
-          max_tokens: 10
-          skip_special_tokens: true
-          stop: ["<|endoftext|>"]
-      cache_cfgs:
-        cache_type: json_file
-        cache_dir: ./cache/judgment_inference
-        flush_threshold: 10
-
-    # 公共metrics配置锚点
-    metrics: &common_metrics
-      - metrics_type: ASR
-        metrics_name: ASR
-        judgment_cfgs: *common_judgment
 
   # Benchmarks配置
   benchmarks:
@@ -74,7 +77,8 @@ eval_cfgs:
         load_cfgs:
           data_files: https://raw.githubusercontent.com/llm-attacks/llm-attacks/refs/heads/main/data/advbench/harmful_behaviors.csv
           split: train
-      metrics_cfgs: *common_metrics  # 直接引用公共配置
+      metrics_cfgs:
+        - *accuracy_metrics
 
     StrongReject:
       data_cfgs:
@@ -85,7 +89,8 @@ eval_cfgs:
         load_cfgs:
           data_files: https://raw.githubusercontent.com/alexandrasouly/strongreject/refs/heads/main/strongreject_dataset/strongreject_dataset.csv
           split: train
-      metrics_cfgs: *common_metrics
+      metrics_cfgs:
+        - *accuracy_metrics
 
     JBB-Behaviors:
       data_cfgs:
@@ -96,30 +101,7 @@ eval_cfgs:
         load_cfgs:
           name: behaviors
           split: harmful
-      metrics_cfgs: *common_metrics
-
-    # # Benchmark 2: 复用metrics配置但修改其中一个metric
-    # CustomBench:
-    #   data_name_or_path: custom/path
-    #   data_template: CustomTemplate
-    #   metrics_cfgs:
-    #     <<: *common_metrics  # 继承整个metrics列表
-    #     # 修改列表中第一个metric的特定字段
-    #     - <<: *common_metrics[0]  # 继承第一个metric配置
-    #       metrics_name: "Modified_ASR"  # 覆盖字段
-    #       judgment_cfgs:
-    #         <<: *common_judgment  # 继承judgment配置
-    #         model_cfgs:
-    #           model_name_or_path: "custom-model"  # 覆盖模型名称
-
-    # # Benchmark 3: 复用metrics配置但添加新metric
-    # ExtendedBench:
-    #   data_name_or_path: extended/path
-    #   metrics_cfgs:
-    #     - *common_metrics[0]  # 复用第一个metric
-    #     - metrics_type: NewMetric  # 添加新metric
-    #       metrics_name: Additional_Metric
-    #       # 复用公共judgment配置
-    #       judgment_cfgs: *common_judgment
+      metrics_cfgs:
+        - *accuracy_metrics
 
   attack_cfgs: []

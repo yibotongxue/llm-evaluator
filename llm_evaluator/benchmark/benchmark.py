@@ -82,6 +82,8 @@ def main() -> None:
 
     cfgs = deepcopy_config(cfgs)
 
+    cfgs.pop("_common")
+
     output_dir = cfgs["eval_cfgs"].pop("output_dir", "./output")
 
     save_json(cfgs, f"{output_dir}/cfgs.json")
