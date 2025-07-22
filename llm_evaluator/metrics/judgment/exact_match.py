@@ -1,6 +1,6 @@
 from typing import Any
 
-from ...utils.type_utils import InferenceOutput
+from ...utils.type_utils import InferenceInput, InferenceOutput
 from .base import BaseJudgment
 from .registry import JudgmentRegistry
 
@@ -11,7 +11,7 @@ class ExactMatchJudgment(BaseJudgment):
         self, outputs: list[InferenceOutput]
     ) -> list[tuple[bool, dict[str, Any]]]:
         for output in outputs:
-            if InferenceOutput(**output.input).ref_answer is None:
+            if InferenceInput(**output.input).ref_answer is None:
                 raise ValueError("Input does not contain a reference answer.")
 
         results = [

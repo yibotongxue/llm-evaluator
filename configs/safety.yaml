@@ -21,7 +21,7 @@ _common: &common_base
         top_p: 1.0
         max_tokens: 10
         skip_special_tokens: true
-        stop: ["<|endoftext|>"]
+        stop: ["<｜end▁of▁sentence｜>"]
     cache_cfgs:
       cache_type: json_file
       cache_dir: ./cache/judgment_inference

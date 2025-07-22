@@ -18,18 +18,19 @@ model_cfgs:
   vllm_init_args:
     tensor_parallel_size: 4
     dtype: bfloat16
-    max_model_len: 8192
+    max_model_len: 17408
     gpu_memory_utilization: 0.9
-    max_num_seqs: 64
+    max_num_seqs: 16
     enable_prefix_caching: true
 
 inference_cfgs:
   sampling_params:
     max_tokens: 16384
     temperature: 0.0
-    top_k: 1
-    top_p: 1.0
-    stop: ["<|endoftext|>"]
+    repetition_penalty: 1.2
+    top_p: 0.95
+    stop: ["<｜end▁of▁sentence｜>"]
+    seed: 46
 
 cache_cfgs:
   cache_type: json_file
@@ -54,7 +55,8 @@ eval_cfgs:
         load_cfgs:
           split: train
       metrics_cfgs:
-        - *accuracy_metrics
+        - <<: *accuracy_metrics
+          prompt_template: AIME
         - metrics_type: PassAtK
           metrics_name: PassAt3
           judgment_cfgs: *common_judgment
