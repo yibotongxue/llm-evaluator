@@ -18,7 +18,7 @@ class ExactMatchJudgment(BaseJudgment):
             (
                 output.extracted_answer is not None
                 and output.extracted_answer.strip()
-                == InferenceOutput(**output.input).ref_answer.strip()
+                == InferenceInput(**output.input).ref_answer.strip()  # type: ignore [union-attr]
             )
             for output in outputs
         ]

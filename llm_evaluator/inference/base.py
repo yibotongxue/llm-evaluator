@@ -6,6 +6,7 @@ from contextlib import AbstractContextManager
 from typing import Any, ContextManager
 
 from ..prompts import BasePromptBuilder, PromptBuilderRegistry
+from ..utils.config import deepcopy_config
 from ..utils.shutdownable import Shutdownable
 from ..utils.tools import dict_to_hash
 from ..utils.type_utils import InferenceInput, InferenceOutput
@@ -53,7 +54,10 @@ class InferenceInterface(ABC):
             prompt_builder = PromptBuilderRegistry.get_by_name(prompt_template)()
 
         if prompt_builder is not None:
-            inputs = inputs.copy()
+            inputs = [
+                InferenceInput(**deepcopy_config(input.model_dump()))
+                for input in inputs
+            ]
             for input in inputs:
                 last_user_message = input.conversation[-1]
                 if input.prefilled:
@@ -61,11 +65,10 @@ class InferenceInterface(ABC):
                 last_user_message["content"] = prompt_builder.build_prompt(
                     last_user_message["content"]
                 )
-        repeat_inputs = [
-            input.with_repeat_idx(repeat_idx)
-            for repeat_idx in range(repeat_cnt)
-            for input in inputs
-        ]
+        repeat_inputs: list[InferenceInput] = []
+        for input in inputs:
+            for repeat_idx in range(repeat_cnt):
+                repeat_inputs.append(input.with_repeat_idx(repeat_idx))
         outputs = self._generate(
             repeat_inputs, enable_tqdm=enable_tqdm, tqdm_args=tqdm_args
         )

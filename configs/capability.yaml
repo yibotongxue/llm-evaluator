@@ -60,4 +60,5 @@ eval_cfgs:
         - metrics_type: PassAtK
           metrics_name: PassAt3
           judgment_cfgs: *common_judgment
+          prompt_template: AIME
           k: 3
