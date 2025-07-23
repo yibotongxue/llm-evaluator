@@ -1,6 +1,6 @@
 from ...utils.registry import BaseRegistry
-from .base import BaseMatcherJudgment
+from .base import BaseMatcherJudgmentPromptBuilder
 
 
-class MatcherPromptBuilderRegistry(BaseRegistry[BaseMatcherJudgment]):
+class MatcherPromptBuilderRegistry(BaseRegistry[BaseMatcherJudgmentPromptBuilder]):
     pass

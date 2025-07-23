@@ -1,3 +1,4 @@
+import re
 from typing import Any
 
 from ...utils.type_utils import InferenceInput
@@ -43,3 +44,71 @@ class AIMECapabilityDataFormatter(BaseCapabilityDataFormatter):
             ref_answer=str(raw_sample["Answer"]),
             meta_data=raw_sample.copy(),
         )
+
+
+@DataFormatterRegistry.register("MATH")
+class MathCapabilityDataFormatter(BaseCapabilityDataFormatter):
+    """
+    MATH Dataset数据格式化器。
+
+    专门用于处理MATH Dataset的格式化。
+    """
+
+    def is_valid_sample(self, raw_sample: dict[str, Any]) -> bool:
+        """
+        我们直接尝试提取 \\boxed{} 中的答案，如果不能提取，则认为样本无效。
+
+        TODO 或许需要更好的验证方法。
+        """
+        return self._get_ref_answer(raw_sample) is not None
+
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
+        """
+        格式化MATH Dataset对话数据。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+
+        返回
+        -------
+        InferenceInput
+            格式化后的推理输入
+        """
+        question = raw_sample["problem"]
+        ref_answer = self._get_ref_answer(raw_sample)
+        if ref_answer is None:
+            raise ValueError("Invalid sample: no reference answer found.")
+
+        return InferenceInput(
+            conversation=[{"role": "user", "content": question}],
+            prefilled=False,
+            system_prompt="",
+            ref_answer=ref_answer,
+            meta_data=raw_sample.copy(),
+        )
+
+    def _get_ref_answer(self, raw_sample: dict[str, Any]) -> str | None:
+        """
+        从原始样本中提取参考答案。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+
+        返回
+        -------
+        str | None
+            如果找到答案则返回，否则返回None
+        """
+        solution = raw_sample.get("solution")
+        if solution is None or not isinstance(solution, str):
+            return None
+
+        boxed_pattern = r"\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}"
+        boxed_matches = re.findall(boxed_pattern, solution)
+        if boxed_matches and len(boxed_matches) > 0:
+            return boxed_matches[-1]  # type: ignore [no-any-return]
+        return None

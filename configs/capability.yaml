@@ -48,8 +48,6 @@ eval_cfgs:
       data_cfgs:
         data_path: Maxwell-Jia/AIME_2024
         data_template: AIME
-        template_cfgs:
-          prompt_builder_name: AIME
         task_list: null
         data_size: null
         load_cfgs:
@@ -61,4 +59,56 @@ eval_cfgs:
           metrics_name: PassAt3
           judgment_cfgs: *common_judgment
           prompt_template: AIME
+          k: 3
+    MATH:
+      data_cfgs:
+        data_path: ./data/MATH
+        data_template: MATH
+        task_list: null
+        data_size: null
+        load_cfgs:
+          split: train
+      metrics_cfgs:
+        - metrics_type: Accuracy
+          metrics_name: Accuracy
+          judgment_cfgs: &math_judgment
+            judgment_type: LLMMatch
+            model_cfgs:
+              inference_backend: api
+              model_sdk_type: openai
+              model_name_or_path: qwen-plus
+              api_key_name: QWEN_API_KEY
+            inference_cfgs:
+              max_tokens: 4096
+              max_retry: 3
+              max_workers: 8
+              sleep_seconds: 30
+            cache_cfgs:
+              cache_type: json_file
+              cache_dir: ./cache/inference
+              flush_threshold: 10
+            prompt_template: MATH
+          prompt_template: MATH
+        - metrics_type: PassAtK
+          metrics_name: PassAt3
+          judgment_cfgs: *math_judgment
+          prompt_template: MATH
+          k: 3
+    MATH-test:
+      data_cfgs:
+        data_path: ./data/MATH
+        data_template: MATH
+        task_list: null
+        data_size: null
+        load_cfgs:
+          split: test
+      metrics_cfgs:
+        - metrics_type: Accuracy
+          metrics_name: Accuracy
+          judgment_cfgs: *math_judgment
+          prompt_template: MATH
+        - metrics_type: PassAtK
+          metrics_name: PassAt3
+          judgment_cfgs: *math_judgment
+          prompt_template: MATH
           k: 3

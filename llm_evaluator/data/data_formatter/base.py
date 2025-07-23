@@ -29,6 +29,22 @@ class BaseDataFormatter(ABC):
         """
         return True
 
+    def is_valid_sample(self, raw_sample: dict[str, Any]) -> bool:
+        """
+        判断样本是否有效。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+
+        返回
+        -------
+        bool
+            如果样本有效则返回True，否则返回False
+        """
+        return True
+
     @abstractmethod
     def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
         """

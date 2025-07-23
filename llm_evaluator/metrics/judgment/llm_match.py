@@ -17,7 +17,7 @@ class LLMMatchJudgment(BaseJudgment):
             "cache_cfgs", None
         )
         self.inference: InferenceInterface | None = None
-        prompt_builder_type = self.inference_cfgs.pop("prompt_builder_type")
+        prompt_builder_type = self.judgment_cfgs["prompt_template"]
         self.prompt_builder = MatcherPromptBuilderRegistry.get_by_name(
             prompt_builder_type
         )()
@@ -73,6 +73,8 @@ class LLMMatchJudgment(BaseJudgment):
                         False,
                         {
                             "dismatch_reason": "extracted answer is null",
+                            "extracted_answer": None,
+                            "ref_answer": ref_answers[i],
                             "raw_output": outputs[i].response,
                         },
                     )
@@ -83,7 +85,13 @@ class LLMMatchJudgment(BaseJudgment):
                         self.prompt_builder.extract_answer(
                             judgments[judgment_idx][0].response
                         ),
-                        {"raw_output": outputs[i].response},
+                        {
+                            "extracted_answer": outputs[i].extracted_answer,
+                            "ref_answer": ref_answers[i],
+                            "raw_output": outputs[i].response,
+                            "prompt": prompts[judgment_idx],
+                            "judgment_output": judgments[judgment_idx][0].response,
+                        },
                     )
                 )
                 judgment_idx += 1

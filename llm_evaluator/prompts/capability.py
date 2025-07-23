@@ -62,3 +62,23 @@ IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your 
             return answer
 
         return None
+
+
+@PromptBuilderRegistry.register("MATH")
+class MathPromptBuilder(CapabilityPromptBuilder):
+    def build_prompt(self, raw_prompt: str) -> str:
+        # You should provide detailed and rigorous derivation and analysis.
+        return f"""
+Solve the following math problem step by step. The last line of your response should be of the form \\boxed{{X}} where X is the answer to the problem.
+
+{raw_prompt}
+
+IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your final answer. This is critical for automated evaluation.
+""".strip()
+
+    def extract_answer(self, raw_output: str) -> str | None:
+        boxed_pattern = r"\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}"
+        boxed_matches = re.findall(boxed_pattern, raw_output)
+        if boxed_matches and len(boxed_matches) > 0:
+            return boxed_matches[-1]  # type: ignore [no-any-return]
+        return raw_output

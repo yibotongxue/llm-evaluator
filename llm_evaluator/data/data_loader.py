@@ -90,8 +90,11 @@ class BenchmarkDataLoader:
         raw_samples = [
             data_formatter.format_conversation(raw_sample)
             for raw_sample in dataset
-            if task_list is None
-            or data_formatter.is_in_task_list(raw_sample, task_list)
+            if (
+                task_list is None
+                or data_formatter.is_in_task_list(raw_sample, task_list)
+            )
+            and data_formatter.is_valid_sample(raw_sample)
         ]
 
         if data_size is not None:

@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class BaseMatcherJudgment(ABC):
+class BaseMatcherJudgmentPromptBuilder(ABC):
     @abstractmethod
     def build_prompt(self, ref_answer: str, answer: str) -> str:
         pass
