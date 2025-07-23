@@ -28,7 +28,15 @@ class AccuracyMetricsComputer(BaseMetricsComputer):
             metrics_name=self.metrics_name,
             metrics=accuracy,
             meta_data={
-                "raw_outputs": [output.response for output in flatten_outputs],
+                "all_meta_data": [
+                    {
+                        "input": flatten_outputs[i].input,
+                        "raw_output": flatten_outputs[i].response,
+                        "judgment_meta_data": judgment_meta_datas[i],
+                        "correctness": correctness[i],
+                    }
+                    for i in range(len(flatten_outputs))
+                ],
                 "judgment_meta_datas": judgment_meta_datas,
             },
         )

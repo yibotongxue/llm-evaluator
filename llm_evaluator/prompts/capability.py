@@ -88,7 +88,7 @@ IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your 
 @PromptBuilderRegistry.register("MMLUPro")
 class MMLUProPromptBuilder(CapabilityPromptBuilder):
     def build_prompt(self, raw_prompt: str) -> str:
-        return f"""You are be provided with a single choice problem. Please thoughtfully analyze the question and select the most appropriate answer from the provided options.
+        return f"""You will be provided with a single choice problem. Please thoughtfully analyze the question and select the most appropriate answer from the provided options.
 You should think step by step and perform detailed and necessary reasoning before arriving at your final answer.
 The question and the options are as follows:
 
@@ -104,7 +104,44 @@ Please only contain the option letter in the answer tag, ignore the content of t
     def extract_answer(self, raw_output: str) -> str | None:
         extracted_content = extract_last_tag_content(raw_output, "answer")
         if extracted_content is None:
-            return None
+            return self._extract_answer_if_tag_fail(raw_output)
         if len(extracted_content) == 1:
             return extracted_content.upper()
         return extracted_content.strip()[0].upper()
+
+    def _extract_answer_if_tag_fail(self, response_text: str) -> str | None:
+        ANSWER_OPTIONS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+        patterns = [
+            r"ANSWER:\s*([A-J])",  # ANSWER: X
+            r"ANSWER\s+([A-J])",  # ANSWER X
+            r"Answer:\s*([A-J])",  # Answer: X
+            r"Answer\s+([A-J])",  # Answer X
+            r"(?:the\s+)?answer\s+is\s+\(?([A-J])\)?",  # The answer is X
+            r"answer:\s*([A-J])",  # answer: X
+            r"answer\s+([A-J])",  # answer X
+            r"\*\*ANSWER:\*\*\s*([A-J])",  # **ANSWER:** X
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, response_text, re.IGNORECASE)
+            if match:
+                return match.group(1).upper()
+
+        lines = response_text.strip().split("\n")
+        for line in reversed(lines):
+            for opt in ANSWER_OPTIONS:
+                if re.search(
+                    r"[^A-Z]"
+                    + opt
+                    + r"[^A-Z]|^"
+                    + opt
+                    + r"[^A-Z]|[^A-Z]"
+                    + opt
+                    + r"$|^"
+                    + opt
+                    + r"$",
+                    line,
+                ):
+                    return opt
+
+        return None
