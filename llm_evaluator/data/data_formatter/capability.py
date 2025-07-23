@@ -62,6 +62,24 @@ class MathCapabilityDataFormatter(BaseCapabilityDataFormatter):
         """
         return self._get_ref_answer(raw_sample) is not None
 
+    def is_in_task_list(self, raw_sample: dict[str, Any], task_list: list[str]) -> bool:
+        """
+        判断样本是否在任务列表中。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+        task_list : list[str]
+            任务列表
+
+        返回
+        -------
+        bool
+            如果样本类别在任务列表中则返回True，否则返回False
+        """
+        return raw_sample["type"] in task_list
+
     def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
         """
         格式化MATH Dataset对话数据。
@@ -112,3 +130,87 @@ class MathCapabilityDataFormatter(BaseCapabilityDataFormatter):
         if boxed_matches and len(boxed_matches) > 0:
             return boxed_matches[-1]  # type: ignore [no-any-return]
         return None
+
+
+@DataFormatterRegistry.register("MMLUPro")
+class MMLUProCapabilityDataFormatter(BaseCapabilityDataFormatter):
+    """
+    MMLU Pro能力评估数据格式化器。
+
+    专门用于处理MMLU Pro数据集的格式化。
+    """
+
+    def is_valid_sample(self, raw_sample: dict[str, Any]) -> bool:
+        """
+        检查样本是否有效。
+
+        MMLU Pro样本被认为是有效的，如果它：
+        - 包含 "question"、"options" 和 "answer" 字段
+        - "answer" 是一个单字符字符串（例如 'A'、'B'、'C' 等）
+        - "options" 是一个列表，且其长度大于等于 "answer" 字符对应的选项索引
+        """
+        if (
+            not "question" in raw_sample
+            or not "options" in raw_sample
+            or not "answer" in raw_sample
+        ):
+            return False
+        ref_answer = raw_sample["answer"]
+        if not isinstance(ref_answer, str) or len(ref_answer) != 1:
+            return False
+        if not isinstance(raw_sample["options"], list) or len(
+            raw_sample["options"]
+        ) <= ord(ref_answer) - ord("A"):
+            return False
+        return True
+
+    def is_in_task_list(self, raw_sample: dict[str, Any], task_list: list[str]) -> bool:
+        """
+        判断样本是否在任务列表中。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+        task_list : list[str]
+            任务列表
+
+        返回
+        -------
+        bool
+            如果样本类别在任务列表中则返回True，否则返回False
+        """
+        return raw_sample["category"] in task_list
+
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
+        """
+        格式化MMLU Pro对话数据。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+
+        返回
+        -------
+        InferenceInput
+            格式化后的推理输入
+        """
+        question = raw_sample["question"]
+        options = raw_sample["options"]
+        formatted_options = "\n".join(
+            f"{chr(65 + i)}. {option}" for i, option in enumerate(options)
+        )
+        prompt = f"""
+Question: {question}
+
+Options:
+{formatted_options}
+"""
+        return InferenceInput(
+            conversation=[{"role": "user", "content": prompt}],
+            prefilled=False,
+            system_prompt="",
+            ref_answer=raw_sample["answer"],
+            meta_data=raw_sample.copy(),
+        )

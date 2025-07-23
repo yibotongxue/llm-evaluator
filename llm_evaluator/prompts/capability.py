@@ -1,5 +1,6 @@
 import re
 
+from ..utils.extract_tools import extract_last_tag_content
 from .base import BasePromptBuilder
 from .registry import PromptBuilderRegistry
 
@@ -82,3 +83,28 @@ IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your 
         if boxed_matches and len(boxed_matches) > 0:
             return boxed_matches[-1]  # type: ignore [no-any-return]
         return raw_output
+
+
+@PromptBuilderRegistry.register("MMLUPro")
+class MMLUProPromptBuilder(CapabilityPromptBuilder):
+    def build_prompt(self, raw_prompt: str) -> str:
+        return f"""You are be provided with a single choice problem. Please thoughtfully analyze the question and select the most appropriate answer from the provided options.
+You should think step by step and perform detailed and necessary reasoning before arriving at your final answer.
+The question and the options are as follows:
+
+{raw_prompt}
+
+Finally you should give your answer in the format in the last line as follows:
+<answer>OPTION</answer>
+For example, if you think the answer is option A, you should output:
+<answer>A</answer>
+Please only contain the option letter in the answer tag, ignore the content of the option.
+""".strip()  # nosec
+
+    def extract_answer(self, raw_output: str) -> str | None:
+        extracted_content = extract_last_tag_content(raw_output, "answer")
+        if extracted_content is None:
+            return None
+        if len(extracted_content) == 1:
+            return extracted_content.upper()
+        return extracted_content.strip()[0].upper()

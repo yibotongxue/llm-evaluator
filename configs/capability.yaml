@@ -112,3 +112,19 @@ eval_cfgs:
           judgment_cfgs: *math_judgment
           prompt_template: MATH
           k: 3
+    MMLU-Pro:
+      data_cfgs:
+        data_path: TIGER-Lab/MMLU-Pro
+        data_template: MMLUPro
+        task_list: null
+        data_size: null
+        load_cfgs:
+          split: test
+      metrics_cfgs:
+        - <<: *accuracy_metrics
+          prompt_template: MMLUPro
+        - metrics_type: PassAtK
+          metrics_name: PassAt3
+          judgment_cfgs: *common_judgment
+          prompt_template: MMLUPro
+          k: 3
