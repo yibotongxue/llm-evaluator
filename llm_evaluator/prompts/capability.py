@@ -1,6 +1,5 @@
 import re
 
-from ..utils.extract_tools import extract_last_tag_content
 from .base import BasePromptBuilder
 from .registry import PromptBuilderRegistry
 
@@ -87,49 +86,35 @@ IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your 
 
 @PromptBuilderRegistry.register("MMLUPro")
 class MMLUProPromptBuilder(CapabilityPromptBuilder):
+    _ANSWER_OPTIONS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+
     def build_prompt(self, raw_prompt: str) -> str:
-        return f"""You will be provided with a single choice problem. Please thoughtfully analyze the question and select the most appropriate answer from the provided options.
-You should think step by step and perform detailed and necessary reasoning before arriving at your final answer.
-The question and the options are as follows:
+        return f"""
+Answer the following multiple choice question. Think step by step before answering.
+
+IMPORTANT: Your final answer MUST be in the format "ANSWER: X" where X is one of the option letters {self._ANSWER_OPTIONS}.
+For example, if you think option B is correct, the last line of your response should be exactly "ANSWER: B".
 
 {raw_prompt}
-
-Finally you should give your answer in the format in the last line as follows:
-<answer>OPTION</answer>
-For example, if you think the answer is option A, you should output:
-<answer>A</answer>
-Please only contain the option letter in the answer tag, ignore the content of the option.
 """.strip()  # nosec
 
     def extract_answer(self, raw_output: str) -> str | None:
-        extracted_content = extract_last_tag_content(raw_output, "answer")
-        if extracted_content is None:
-            return self._extract_answer_if_tag_fail(raw_output)
-        if len(extracted_content) == 1:
-            return extracted_content.upper()
-        return extracted_content.strip()[0].upper()
-
-    def _extract_answer_if_tag_fail(self, response_text: str) -> str | None:
-        ANSWER_OPTIONS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
         patterns = [
             r"ANSWER:\s*([A-J])",  # ANSWER: X
-            r"ANSWER\s+([A-J])",  # ANSWER X
-            r"Answer:\s*([A-J])",  # Answer: X
-            r"Answer\s+([A-J])",  # Answer X
             r"(?:the\s+)?answer\s+is\s+\(?([A-J])\)?",  # The answer is X
             r"answer:\s*([A-J])",  # answer: X
-            r"answer\s+([A-J])",  # answer X
             r"\*\*ANSWER:\*\*\s*([A-J])",  # **ANSWER:** X
+            r"答案[是为:：]\s*([A-J])",
         ]
 
         for pattern in patterns:
-            match = re.search(pattern, response_text, re.IGNORECASE)
+            match = re.search(pattern, raw_output, re.IGNORECASE)
             if match:
                 return match.group(1).upper()
 
-        lines = response_text.strip().split("\n")
+        lines = raw_output.strip().split("\n")
         for line in reversed(lines):
-            for opt in ANSWER_OPTIONS:
+            for opt in self._ANSWER_OPTIONS:
                 if re.search(
                     r"[^A-Z]"
                     + opt
