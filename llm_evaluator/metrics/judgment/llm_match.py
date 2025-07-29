@@ -30,25 +30,67 @@ class LLMMatchJudgment(BaseJudgment):
             if ref_answer is None:
                 raise ValueError("Input does not contain a reference answer.")
         extracted_answers = [output.extracted_answer for output in outputs]
-        results: list[tuple[bool, dict[str, Any]]] = []
-        none_idxs = [
-            i for i in range(len(extracted_answers)) if extracted_answers[i] is None
+        exact_matches_idx = [
+            i
+            for i in range(len(extracted_answers))
+            if extracted_answers[i] == ref_answers[i]
         ]
-        if len(none_idxs) == len(extracted_answers):
+        not_exact_matches_idxs = [
+            i
+            for i in range(len(extracted_answers))
+            if extracted_answers[i] != ref_answers[i]
+        ]
+        if len(exact_matches_idx) == len(extracted_answers):
             return [
                 (
-                    False,
+                    True,
                     {
-                        "dismatch_reason": "extracted answer is null",
+                        "match_reason": "exact match",
+                        "extracted_answer": output.extracted_answer,
                         "raw_output": output.response,
                     },
                 )
                 for output in outputs
             ]
+        results: list[tuple[bool, dict[str, Any]]] = []
+        none_idxs = [i for i in not_exact_matches_idxs if extracted_answers[i] is None]
+        if len(none_idxs) == len(not_exact_matches_idxs):
+            for i in range(len(outputs)):
+                if i in exact_matches_idx:
+                    results.append(
+                        (
+                            True,
+                            {
+                                "match_reason": "exact match",
+                                "extracted_answer": outputs[i].extracted_answer,
+                                "ref_answer": ref_answers[i],
+                                "raw_output": outputs[i].response,
+                            },
+                        )
+                    )
+                else:
+                    results.append(
+                        (
+                            False,
+                            {
+                                "dismatch_reason": "extracted answer is null",
+                                "extracted_answer": None,
+                                "ref_answer": ref_answers[i],
+                                "raw_output": outputs[i].response,
+                            },
+                        )
+                    )
+            if len(results) != len(outputs):
+                raise ValueError(
+                    "The number of results does not match the number of outputs."
+                )
+            return results
+        need_judgment_indices = [
+            i for i in not_exact_matches_idxs if i not in none_idxs
+        ]
         prompts = [
-            self.prompt_builder.build_prompt(ref_answer, extracted_answers[i])  # type: ignore [arg-type]
-            for i, ref_answer in enumerate(ref_answers)
-            if i not in none_idxs
+            self.prompt_builder.build_prompt(ref_answers[i], extracted_answers[i])  # type: ignore [arg-type]
+            for i in need_judgment_indices
         ]
         inputs = [InferenceInput.from_prompts(prompt) for prompt in prompts]
 
@@ -67,7 +109,19 @@ class LLMMatchJudgment(BaseJudgment):
         )
         judgment_idx = 0
         for i in range(len(outputs)):
-            if i in none_idxs:
+            if i in exact_matches_idx:
+                results.append(
+                    (
+                        True,
+                        {
+                            "match_reason": "exact match",
+                            "extracted_answer": outputs[i].extracted_answer,
+                            "ref_answer": ref_answers[i],
+                            "raw_output": outputs[i].response,
+                        },
+                    )
+                )
+            elif i in none_idxs:
                 results.append(
                     (
                         False,
