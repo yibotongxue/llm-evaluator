@@ -1,7 +1,9 @@
+import builtins
 from functools import cached_property
 from typing import Any
 
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
+from pandas import read_csv
 
 from ..utils.type_utils import BenchmarkConfigs, EvalConfigs, InferenceInput
 from .data_formatter import BaseDataFormatter, DataFormatterRegistry
@@ -84,9 +86,21 @@ class BenchmarkDataLoader:
         task_list = data_cfgs.get("task_list")
 
         # 加载数据
-        data_path = data_cfgs["data_path"]
-        load_cfgs = data_cfgs.get("load_cfgs", {})
-        dataset = load_dataset(path=data_path, **load_cfgs)
+        load_type = data_cfgs.get("load_type", "datasets")
+        if load_type == "datasets":
+            data_path = data_cfgs["data_path"]
+            load_cfgs = data_cfgs.get("load_cfgs", {})
+            dataset = load_dataset(path=data_path, **load_cfgs)
+        elif load_type == "pandas":
+            data_files = data_cfgs["data_files"]
+            read_csv_args = data_cfgs.get("read_csv_args", {})
+            if "dtype" in read_csv_args:
+                read_csv_args["dtype"] = getattr(builtins, read_csv_args["dtype"])
+            df = read_csv(
+                data_files,
+                **read_csv_args,
+            )
+            dataset = Dataset.from_pandas(df)
         raw_samples = [
             data_formatter.format_conversation(raw_sample)
             for raw_sample in dataset

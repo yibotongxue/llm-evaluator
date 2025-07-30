@@ -132,3 +132,56 @@ class JBBBehaviorsDataFormatter(BaseSafetyDataFormatter):
             "raw_sample": raw_sample,
         }
         return InferenceInput.from_prompts(raw_sample["Goal"]).with_meta_data(meta_data)
+
+
+@DataFormatterRegistry.register("wildjailbreak")
+class WildJailbreakDataFormatter(BaseSafetyDataFormatter):
+    """
+    WildJailbreak安全性评估数据格式化器。
+
+    用于处理WildJailbreak数据集的格式化。
+    """
+
+    def is_in_task_list(self, raw_sample: dict[str, Any], task_list: list[str]) -> bool:
+        return raw_sample["data_type"] in task_list
+
+    def is_valid_sample(self, raw_sample: dict[str, Any]) -> bool:
+        if not "data_type" in raw_sample:
+            return False
+        data_type = raw_sample["data_type"]
+        if data_type == "vanilla_harmful":
+            return "vanilla" in raw_sample
+        elif data_type == "adversarial_harmful":
+            return "adversarial" in raw_sample
+        else:
+            return False
+
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
+        """
+        格式化WildJailbreak对话数据。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+
+        返回
+        -------
+        InferenceInput
+            格式化后的推理输入
+        """
+        data_type = raw_sample["data_type"]
+        if data_type == "vanilla_harmful":
+            prompt_field = "vanilla"
+        elif data_type == "adversarial_harmful":
+            prompt_field = "adversarial"
+        else:
+            raise ValueError(
+                f"Unknown supported data type for safety test: {data_type}"
+            )
+        return InferenceInput.from_prompts(raw_sample[prompt_field]).with_meta_data(
+            {
+                "raw_sample": raw_sample,
+                "task": "wildjailbreak",
+            }
+        )

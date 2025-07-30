@@ -104,4 +104,30 @@ eval_cfgs:
       metrics_cfgs:
         - *accuracy_metrics
 
+    WildJailbreakVanilla:
+      data_cfgs:
+        load_type: pandas
+        data_files: ./data/wildjailbreak/train/train.tsv
+        data_template: wildjailbreak
+        task_list: [vanilla]
+        data_size: null
+        read_csv_args:
+          sep: "\t"
+          dtype: str
+      metrics_cfgs:
+        - *accuracy_metrics
+
+    WildJailbreakAdversarial:
+      data_cfgs:
+        load_type: pandas
+        data_files: ./data/wildjailbreak/train/train.tsv
+        data_template: wildjailbreak
+        task_list: [adversarial]
+        data_size: null
+        read_csv_args:
+          sep: "\t"
+          dtype: str
+      metrics_cfgs:
+        - *accuracy_metrics
+
   attack_cfgs: []
