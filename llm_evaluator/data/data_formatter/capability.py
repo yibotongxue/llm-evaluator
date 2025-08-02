@@ -1,3 +1,4 @@
+import random
 import re
 from typing import Any
 
@@ -212,5 +213,74 @@ Options:
             prefilled=False,
             system_prompt="",
             ref_answer=raw_sample["answer"],
+            meta_data=raw_sample.copy(),
+        )
+
+
+class GPQACapabilityDataFormatter(BaseCapabilityDataFormatter):
+    def __init__(self) -> None:
+        self.rng = random.Random(x=42)  # nosec
+
+    def is_valid_sample(self, raw_sample: dict[str, Any]) -> bool:
+        """
+        检查样本是否有效。
+
+        GPQA样本被认为是有效的，如果它：
+        - 包含 "Question"、"Correct Answer"、"Incorrect Answer 1"、"Incorrect Answer 2" 和 "Incorrect Answer 3" 字段
+        - "Question" 字段是一个非空字符串
+        - "Correct Answer" 字段是一个非空字符串
+        - "Incorrect Answer 1"、"Incorrect Answer 2" 和 "Incorrect Answer 3" 字段是非空字符串
+        """
+        return (
+            self._valid_key("Question", raw_sample)
+            and self._valid_key("Correct Answer", raw_sample)
+            and self._valid_key("Incorrect Answer 1", raw_sample)
+            and self._valid_key("Incorrect Answer 2", raw_sample)
+            and self._valid_key("Incorrect Answer 3", raw_sample)
+        )
+
+    def _valid_key(self, key: str, raw_sample: dict[str, Any]) -> bool:
+        return (
+            key in raw_sample
+            and isinstance(raw_sample[key], str)
+            and len(raw_sample[key]) > 0
+        )
+
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
+        """
+        格式化GPQA对话数据。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+
+        返回
+        -------
+        InferenceInput
+            格式化后的推理输入
+        """
+        permutation = self.rng.sample(range(4), 4)
+        choices = [
+            raw_sample["Incorrect Answer 1"],
+            raw_sample["Incorrect Answer 2"],
+            raw_sample["Incorrect Answer 3"],
+            raw_sample["Correct Answer"],
+        ]
+        formatted_choices = "\n".join(
+            f"{chr(65 + i)}. {choices[permutation[i]]}" for i in range(4)
+        )
+        prompt = f"""
+Question: {raw_sample["Question"]}
+
+Options:
+{formatted_choices}
+"""
+        correct_choice = permutation.index(3)
+        return InferenceInput(
+            conversation=[{"role": "user", "content": prompt}],
+            prefilled=False,
+            system_prompt="",
+            ref_answer=chr(65 + correct_choice),
             meta_data=raw_sample.copy(),
         )

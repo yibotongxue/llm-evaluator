@@ -19,8 +19,8 @@ model_cfgs:
     tensor_parallel_size: 4
     dtype: bfloat16
     max_model_len: 17408
-    gpu_memory_utilization: 0.9
-    max_num_seqs: 16
+    gpu_memory_utilization: 0.8
+    max_num_seqs: 8
     enable_prefix_caching: true
 
 inference_cfgs:
@@ -33,9 +33,14 @@ inference_cfgs:
     seed: 46
 
 cache_cfgs:
-  cache_type: json_file
-  cache_dir: ./cache/inference
-  flush_threshold: 10
+  cache_type: redis
+  json_dir: null
+  redis_cfgs:
+    host: localhost
+    port: 6379
+    db: 0
+    password: password
+  force_update: false
 
 eval_cfgs:
   output_dir: ./output
@@ -65,7 +70,7 @@ eval_cfgs:
         data_path: ./data/MATH
         data_template: MATH
         task_list: null
-        data_size: null
+        data_size: 500
         load_cfgs:
           split: train
       metrics_cfgs:
@@ -84,28 +89,14 @@ eval_cfgs:
               max_workers: 8
               sleep_seconds: 30
             cache_cfgs:
-              cache_type: json_file
-              cache_dir: ./cache/inference
-              flush_threshold: 10
-            prompt_template: MATH
-          prompt_template: MATH
-        - metrics_type: PassAtK
-          metrics_name: PassAt3
-          judgment_cfgs: *math_judgment
-          prompt_template: MATH
-          k: 3
-    MATH-test:
-      data_cfgs:
-        data_path: ./data/MATH
-        data_template: MATH
-        task_list: null
-        data_size: null
-        load_cfgs:
-          split: test
-      metrics_cfgs:
-        - metrics_type: Accuracy
-          metrics_name: Accuracy
-          judgment_cfgs: *math_judgment
+              cache_type: redis
+              json_dir: null
+              redis_cfgs:
+                host: localhost
+                port: 6379
+                db: 0
+                password: password
+            prompt_template: MathMatch
           prompt_template: MATH
         - metrics_type: PassAtK
           metrics_name: PassAt3
@@ -117,7 +108,7 @@ eval_cfgs:
         data_path: TIGER-Lab/MMLU-Pro
         data_template: MMLUPro
         task_list: null
-        data_size: null
+        data_size: 500
         load_cfgs:
           split: test
       metrics_cfgs:
@@ -127,4 +118,21 @@ eval_cfgs:
           metrics_name: PassAt3
           judgment_cfgs: *common_judgment
           prompt_template: MMLUPro
+          k: 3
+    GPQA:
+      data_cfgs:
+        load_type: modelscope
+        data_path: modelscope/gpqa
+        data_template: GPQA
+        task_list: null
+        data_size: null
+        load_cfgs:
+          split: train
+      metrics_cfgs:
+        - <<: *accuracy_metrics
+          prompt_template: GPQA
+        - metrics_type: PassAtK
+          metrics_name: PassAt3
+          judgment_cfgs: *common_judgment
+          prompt_template: GPQA
           k: 3

@@ -48,7 +48,7 @@ The answer tag is necessary for automated evaluation. Fill "Correct" if the prov
 
     @override
     def parse_output(self, raw_output: InferenceOutput) -> InferenceOutput:
-        extracted_answer = extract_last_tag_content(raw_output, "answer")
+        extracted_answer = extract_last_tag_content(raw_output.response, "answer")
         if extracted_answer is None:
             return raw_output
         is_correct = extracted_answer.strip().lower() == "correct"

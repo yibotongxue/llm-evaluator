@@ -173,3 +173,53 @@ For example, if you think option B is correct, the last line of your response sh
                     return opt
 
         return None
+
+
+@PromptBuilderRegistry.register("GPQA")
+class GPQAPromptBuilder(CapabilityPromptBuilder):
+    _ANSWER_OPTIONS = ["A", "B", "C", "D"]
+
+    @override
+    def _build_prompt(self, raw_prompt: str) -> str:
+        return f"""
+Answer the following single choice question. Think step by step before answering.
+
+IMPORTANT: Your final answer MUST be in the format "ANSWER: X" where X is one of the option letters {self._ANSWER_OPTIONS}.
+For example, if you think option B is correct, the last line of your response should be exactly "ANSWER: B".
+
+{raw_prompt}
+""".strip()  # nosec
+
+    @override
+    def _extract_answer(self, raw_output: str) -> str | None:
+        patterns = [
+            r"ANSWER:\s*([A-D])",  # ANSWER: X
+            r"(?:the\s+)?answer\s+is\s+\(?([A-D])\)?",  # The answer is X
+            r"answer:\s*([A-D])",  # answer: X
+            r"\*\*ANSWER:\*\*\s*([A-D])",  # **ANSWER:** X
+            r"答案[是为:：]\s*([A-D])",
+        ]
+
+        for pattern in patterns:
+            match = re.search(pattern, raw_output, re.IGNORECASE)
+            if match:
+                return match.group(1).upper()
+
+        lines = raw_output.strip().split("\n")
+        for line in reversed(lines):
+            for opt in self._ANSWER_OPTIONS:
+                if re.search(
+                    r"[^A-Z]"
+                    + opt
+                    + r"[^A-Z]|^"
+                    + opt
+                    + r"[^A-Z]|[^A-Z]"
+                    + opt
+                    + r"$|^"
+                    + opt
+                    + r"$",
+                    line,
+                ):
+                    return opt
+
+        return None

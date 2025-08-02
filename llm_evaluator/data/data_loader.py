@@ -4,6 +4,7 @@ from functools import cached_property
 from typing import Any
 
 from datasets import Dataset, load_dataset
+from modelscope.msdatasets import MsDataset
 from pandas import read_csv
 
 from ..utils.type_utils import BenchmarkConfigs, EvalConfigs, InferenceInput
@@ -92,6 +93,10 @@ class BenchmarkDataLoader:
             data_path = data_cfgs["data_path"]
             load_cfgs = data_cfgs.get("load_cfgs", {})
             dataset = load_dataset(path=data_path, **load_cfgs)
+        elif load_type == "modelscope":
+            data_path = data_cfgs["data_path"]
+            load_cfgs = data_cfgs.get("load_cfgs", {})
+            dataset = MsDataset.load(data_path, **load_cfgs)
         elif load_type == "pandas":
             data_files = data_cfgs["data_files"]
             read_csv_args = data_cfgs.get("read_csv_args", {}).copy()
