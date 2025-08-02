@@ -1,17 +1,55 @@
 import re
+from abc import abstractmethod
+from typing import override
 
+from ..utils.type_utils import InferenceInput, InferenceOutput
 from .base import BasePromptBuilder
 from .registry import PromptBuilderRegistry
 
 
 class CapabilityPromptBuilder(BasePromptBuilder):
-    pass
+    @override
+    def process_input(self, raw_input: InferenceInput) -> InferenceInput:
+        if not self._valid_conversation(raw_input):
+            raise ValueError("Invalid conversation format.")
+        conversation = raw_input.conversation.copy()
+        last_turn = conversation[-1].copy()
+        raw_prompt = last_turn["content"]
+        built_prompt = self._build_prompt(raw_prompt)
+        last_turn["content"] = built_prompt
+        conversation[-1] = last_turn
+        raw = {
+            **raw_input.model_dump(),
+            "conversation": conversation,
+        }
+        return InferenceInput(**raw)
+
+    @override
+    def parse_output(self, raw_output: InferenceOutput) -> InferenceOutput:
+        return raw_output.with_parsed_output(self._extract_answer(raw_output.response))
+
+    def _valid_conversation(self, raw_input: InferenceInput) -> bool:
+        last_turn = raw_input.conversation[-1]
+        return (
+            "role" in last_turn
+            and last_turn["role"] == "user"
+            and "content" in last_turn
+        )
+
+    @abstractmethod
+    def _build_prompt(self, raw_prompt: str) -> str:
+        pass
+
+    @abstractmethod
+    def _extract_answer(self, raw_response: str) -> str | None:
+        pass
 
 
 # modified from https://github.com/UCSC-VLAA/STAR-1/blob/main/benchmark/reasoning_benchmark/aime_eval.py
 @PromptBuilderRegistry.register("AIME")
 class AIMEPromptBuilder(CapabilityPromptBuilder):
-    def build_prompt(self, raw_prompt: str) -> str:
+    @override
+    def _build_prompt(self, raw_prompt: str) -> str:
         return f"""
 Solve the following AIME math problem step by step. The last line of your response should be of the form \\boxed{{X}} where X is the answer to the problem.
 
@@ -20,7 +58,8 @@ Solve the following AIME math problem step by step. The last line of your respon
 IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your numerical answer. This is critical for automated evaluation.
 """.strip()
 
-    def extract_answer(self, raw_output: str) -> str | None:
+    @override
+    def _extract_answer(self, raw_output: str) -> str | None:
         BOXED_PATTERN = r"\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}"
         ANSWER_IS_PATTERN = r"(?i)(?:the\s+)?answer\s+(?:is|=)\s+(\d+)"
         LAST_LINE_NUMBER_PATTERN = r"(?m)^(\d+)$"
@@ -66,7 +105,8 @@ IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your 
 
 @PromptBuilderRegistry.register("MATH")
 class MathPromptBuilder(CapabilityPromptBuilder):
-    def build_prompt(self, raw_prompt: str) -> str:
+    @override
+    def _build_prompt(self, raw_prompt: str) -> str:
         # You should provide detailed and rigorous derivation and analysis.
         return f"""
 Solve the following math problem step by step. The last line of your response should be of the form \\boxed{{X}} where X is the answer to the problem.
@@ -76,7 +116,8 @@ Solve the following math problem step by step. The last line of your response sh
 IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your final answer. This is critical for automated evaluation.
 """.strip()
 
-    def extract_answer(self, raw_output: str) -> str | None:
+    @override
+    def _extract_answer(self, raw_output: str) -> str | None:
         boxed_pattern = r"\\boxed\{([^{}]*(?:\{[^{}]*\}[^{}]*)*)\}"
         boxed_matches = re.findall(boxed_pattern, raw_output)
         if boxed_matches and len(boxed_matches) > 0:
@@ -88,7 +129,8 @@ IMPORTANT: Your final answer MUST be in the format \\boxed{{X}} where X is your 
 class MMLUProPromptBuilder(CapabilityPromptBuilder):
     _ANSWER_OPTIONS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
 
-    def build_prompt(self, raw_prompt: str) -> str:
+    @override
+    def _build_prompt(self, raw_prompt: str) -> str:
         return f"""
 Answer the following multiple choice question. Think step by step before answering.
 
@@ -98,7 +140,8 @@ For example, if you think option B is correct, the last line of your response sh
 {raw_prompt}
 """.strip()  # nosec
 
-    def extract_answer(self, raw_output: str) -> str | None:
+    @override
+    def _extract_answer(self, raw_output: str) -> str | None:
         patterns = [
             r"ANSWER:\s*([A-J])",  # ANSWER: X
             r"(?:the\s+)?answer\s+is\s+\(?([A-J])\)?",  # The answer is X

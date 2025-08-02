@@ -1,27 +1,29 @@
 from abc import ABC, abstractmethod
 
+from ..utils.type_utils import InferenceInput, InferenceOutput
+
 
 class BasePromptBuilder(ABC):
     @abstractmethod
-    def build_prompt(self, raw_prompt: str) -> str:
+    def process_input(self, raw_input: InferenceInput) -> InferenceInput:
         """
-        Build a prompt from the raw prompt string.
+        Build a prompt from the raw prompt.
 
         Args:
-            raw_prompt (str): The raw prompt string.
+            raw_prompt (InferenceInput): The raw prompt.
 
         Returns:
-            str: The built prompt.
+            InferenceInput: The built prompt.
         """
 
     @abstractmethod
-    def extract_answer(self, raw_output: str) -> str | None:
+    def parse_output(self, raw_output: InferenceOutput) -> InferenceOutput:
         """
-        Extract the answer from the raw output string.
+        Parse the raw output to extract the answer.
 
         Args:
-            raw_output (str): The raw output string.
+            raw_output (InferenceOutput): The raw output.
 
         Returns:
-            str: The extracted answer.
+            InferenceOutput: The parsed output.
         """

@@ -1,7 +1,8 @@
 from typing import Any
 
 from ...inference import InferenceFactory, InferenceInterface
-from ...prompts.matcher import MatcherPromptBuilderRegistry
+from ...prompts import PromptBuilderRegistry
+from ...prompts.matcher import MatcherPromptBuilder
 from ...utils.type_utils import InferenceInput, InferenceOutput
 from .base import BaseJudgment
 from .registry import JudgmentRegistry
@@ -17,10 +18,10 @@ class LLMMatchJudgment(BaseJudgment):
             "cache_cfgs", None
         )
         self.inference: InferenceInterface | None = None
-        prompt_builder_type = self.judgment_cfgs["prompt_template"]
-        self.prompt_builder = MatcherPromptBuilderRegistry.get_by_name(
-            prompt_builder_type
-        )()
+        self.prompt_builder_type = self.judgment_cfgs["prompt_template"]
+        PromptBuilderRegistry.verify_type(
+            self.prompt_builder_type, MatcherPromptBuilder  # type: ignore [type-abstract]
+        )
 
     def judge(
         self, outputs: list[InferenceOutput]
@@ -29,7 +30,15 @@ class LLMMatchJudgment(BaseJudgment):
         for ref_answer in ref_answers:
             if ref_answer is None:
                 raise ValueError("Input does not contain a reference answer.")
-        extracted_answers = [output.extracted_answer for output in outputs]
+        extracted_answers: list[str | None] = []
+        for output in outputs:
+            if output.parsed_output is not None and not isinstance(
+                output.parsed_output, str
+            ):
+                raise ValueError(
+                    f"Parsed output of judgment must be str or None, but got {output.parsed_output}."
+                )
+            extracted_answers.append(output.parsed_output)
         exact_matches_idx = [
             i
             for i in range(len(extracted_answers))
@@ -46,7 +55,7 @@ class LLMMatchJudgment(BaseJudgment):
                     True,
                     {
                         "match_reason": "exact match",
-                        "extracted_answer": output.extracted_answer,
+                        "extracted_answer": output.parsed_output,
                         "raw_output": output.response,
                     },
                 )
@@ -62,7 +71,7 @@ class LLMMatchJudgment(BaseJudgment):
                             True,
                             {
                                 "match_reason": "exact match",
-                                "extracted_answer": outputs[i].extracted_answer,
+                                "extracted_answer": outputs[i].parsed_output,
                                 "ref_answer": ref_answers[i],
                                 "raw_output": outputs[i].response,
                             },
@@ -88,11 +97,12 @@ class LLMMatchJudgment(BaseJudgment):
         need_judgment_indices = [
             i for i in not_exact_matches_idxs if i not in none_idxs
         ]
-        prompts = [
-            self.prompt_builder.build_prompt(ref_answers[i], extracted_answers[i])  # type: ignore [arg-type]
+        inputs = [
+            InferenceInput.from_prompts(prompt=extracted_answers[i]).with_ref_answer(  # type: ignore [arg-type]
+                ref_answers[i]  # type: ignore [arg-type]
+            )
             for i in need_judgment_indices
         ]
-        inputs = [InferenceInput.from_prompts(prompt) for prompt in prompts]
 
         if self.inference is None:
             self.inference = InferenceFactory.get_inference_instance(
@@ -103,7 +113,7 @@ class LLMMatchJudgment(BaseJudgment):
         judgments = self.inference.generate(
             inputs=inputs,
             repeat_cnt=1,
-            prompt_template=None,
+            prompt_template=self.prompt_builder_type,
             enable_tqdm=True,
             tqdm_args={"desc": "Judging outputs"},
         )
@@ -115,7 +125,7 @@ class LLMMatchJudgment(BaseJudgment):
                         True,
                         {
                             "match_reason": "exact match",
-                            "extracted_answer": outputs[i].extracted_answer,
+                            "extracted_answer": outputs[i].parsed_output,
                             "ref_answer": ref_answers[i],
                             "raw_output": outputs[i].response,
                         },
@@ -134,16 +144,18 @@ class LLMMatchJudgment(BaseJudgment):
                     )
                 )
             else:
+                parsed_output = judgments[judgment_idx][0].parsed_output
+                if not isinstance(parsed_output, bool):
+                    raise ValueError(
+                        f"Parsed output of judgment must be bool, but got {parsed_output}."
+                    )
                 results.append(
                     (
-                        self.prompt_builder.extract_answer(
-                            judgments[judgment_idx][0].response
-                        ),
+                        parsed_output,
                         {
-                            "extracted_answer": outputs[i].extracted_answer,
+                            "extracted_answer": outputs[i].parsed_output,
                             "ref_answer": ref_answers[i],
                             "raw_output": outputs[i].response,
-                            "prompt": prompts[judgment_idx],
                             "judgment_output": judgments[judgment_idx][0].response,
                         },
                     )

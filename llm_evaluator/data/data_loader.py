@@ -1,4 +1,5 @@
 import builtins
+import random
 from functools import cached_property
 from typing import Any
 
@@ -93,7 +94,7 @@ class BenchmarkDataLoader:
             dataset = load_dataset(path=data_path, **load_cfgs)
         elif load_type == "pandas":
             data_files = data_cfgs["data_files"]
-            read_csv_args = data_cfgs.get("read_csv_args", {})
+            read_csv_args = data_cfgs.get("read_csv_args", {}).copy()
             if "dtype" in read_csv_args:
                 read_csv_args["dtype"] = getattr(builtins, read_csv_args["dtype"])
             df = read_csv(
@@ -110,6 +111,10 @@ class BenchmarkDataLoader:
             )
             and data_formatter.is_valid_sample(raw_sample)
         ]
+
+        shuffle_seed = data_cfgs.get("shuffle_seed", 42)
+        random.seed(shuffle_seed)
+        random.shuffle(raw_samples)
 
         if data_size is not None:
             raw_samples = raw_samples[: min(data_size, len(raw_samples))]

@@ -18,7 +18,9 @@ class LLMJudgment(BaseJudgment):
             "cache_cfgs", None
         )
         self.prompt_builder_type = self.judgment_cfgs["prompt_builder_type"]
-        self._verify_prompt_type(self.prompt_builder_type)
+        PromptBuilderRegistry.verify_type(
+            self.prompt_builder_type, JudgmentPromptBuilder  # type: ignore [type-abstract]
+        )
         self.inference: InferenceInterface | None = None
 
     def judge(
@@ -38,22 +40,16 @@ class LLMJudgment(BaseJudgment):
             enable_tqdm=True,
             tqdm_args={"desc": "Judging outputs"},
         )
-        return [
-            (
-                self._answer_to_boolean(judgment[0].extracted_answer),
-                {"raw_output": judgment[0].response},
+        results: list[tuple[bool, dict[str, Any]]] = []
+        for judgment in judgments:
+            if not isinstance(judgment[0].parsed_output, bool):
+                raise ValueError(
+                    f"Parsed output of judgment must be bool, but got {judgment[0].parsed_output}."
+                )
+            results.append(
+                (
+                    judgment[0].parsed_output,
+                    {"raw_output": judgment[0].response},
+                )
             )
-            for judgment in judgments
-        ]
-
-    def _verify_prompt_type(self, prompt_type: str) -> None:
-        prompt_builder = PromptBuilderRegistry.get_by_name(prompt_type)()
-        if not isinstance(prompt_builder, JudgmentPromptBuilder):
-            raise ValueError(
-                f"Prompt builder type '{prompt_type}' is not a valid JudgmentPromptBuilder."
-            )
-
-    def _answer_to_boolean(self, answer: str | None) -> bool:
-        if answer is None:
-            return False
-        return answer.strip().lower() == "true"
+        return results

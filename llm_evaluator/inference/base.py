@@ -58,13 +58,7 @@ class InferenceInterface(ABC):
                 InferenceInput(**deepcopy_config(input.model_dump()))
                 for input in inputs
             ]
-            for input in inputs:
-                last_user_message = input.conversation[-1]
-                if input.prefilled:
-                    last_user_message = input.conversation[-2]
-                last_user_message["content"] = prompt_builder.build_prompt(
-                    last_user_message["content"]
-                )
+            inputs = [prompt_builder.process_input(input) for input in inputs]
         repeat_inputs: list[InferenceInput] = []
         for input in inputs:
             for repeat_idx in range(repeat_cnt):
@@ -73,12 +67,7 @@ class InferenceInterface(ABC):
             repeat_inputs, enable_tqdm=enable_tqdm, tqdm_args=tqdm_args
         )
         if prompt_builder is not None:
-            outputs = [
-                output.with_extracted_answer(
-                    prompt_builder.extract_answer(output.response)
-                )
-                for output in outputs
-            ]
+            outputs = [prompt_builder.parse_output(output) for output in outputs]
         grouped_outputs = [
             outputs[i : i + repeat_cnt] for i in range(0, len(outputs), repeat_cnt)
         ]

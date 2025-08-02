@@ -73,6 +73,13 @@ class InferenceInput(CustomBaseModel):
             return self.conversation[-2]["content"]  # type: ignore [no-any-return]
         return self.conversation[-1]["content"]  # type: ignore [no-any-return]
 
+    def with_ref_answer(self, ref_answer: str) -> InferenceInput:
+        raw = {
+            **self.model_dump(),
+            "ref_answer": ref_answer,
+        }
+        return InferenceInput(**raw)
+
     def with_system_prompt(self, system_prompt: str) -> InferenceInput:
         raw = {
             **self.model_dump(),
@@ -114,17 +121,17 @@ class InferenceInput(CustomBaseModel):
 
 class InferenceOutput(CustomBaseModel):
     response: str
-    extracted_answer: str | None = None
+    parsed_output: Any | None = None
     input: dict[str, Any]
     engine: str
     meta_data: dict[str, Any]
 
     model_config = ConfigDict(extra="allow")
 
-    def with_extracted_answer(self, extracted_answer: str | None) -> InferenceOutput:
+    def with_parsed_output(self, parsed_output: Any | None) -> InferenceOutput:
         raw = {
             **self.model_dump(),
-            "extracted_answer": extracted_answer,
+            "parsed_output": parsed_output,
         }
         return InferenceOutput(**raw)
 

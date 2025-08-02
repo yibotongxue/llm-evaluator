@@ -11,7 +11,15 @@ class ExactMatchJudgment(BaseJudgment):
         self, outputs: list[InferenceOutput]
     ) -> list[tuple[bool, dict[str, Any]]]:
         ref_answers = [InferenceInput(**output.input).ref_answer for output in outputs]
-        extracted_answers = [output.extracted_answer for output in outputs]
+        extracted_answers: list[str | None] = []
+        for output in outputs:
+            if output.parsed_output is not None and not isinstance(
+                output.parsed_output, str
+            ):
+                raise ValueError(
+                    f"Parsed output of judgment must be str or None, but got {output.parsed_output}."
+                )
+            extracted_answers.append(output.parsed_output)
 
         for ref_answer in ref_answers:
             if ref_answer is None:

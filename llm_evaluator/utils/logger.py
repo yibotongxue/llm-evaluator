@@ -16,6 +16,7 @@ class Logger:
         name: str = "app",
         level: str = "INFO",
         console: bool = True,
+        log_dir: str = "logs",
         log_file: str | None = None,
         file_level: str = "DEBUG",
         max_bytes: int = 10 * 1024 * 1024,
@@ -51,7 +52,7 @@ class Logger:
             handlers.append(console_handler)
 
         if not log_file:
-            log_file = f"logs/{name}.log"
+            log_file = f"{log_dir}/{name}.log"
 
         # 确保日志目录存在
         log_dir = os.path.dirname(log_file)
