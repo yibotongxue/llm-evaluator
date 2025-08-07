@@ -156,8 +156,9 @@ class BenchmarkConfigs(CustomBaseModel):
 
 
 class EvalConfigs(CustomBaseModel):
+    benchmark_type: str
     benchmarks: dict[str, BenchmarkConfigs]
-    attack_cfgs: list[dict[str, Any]] | None = None
+    attack_cfgs: list[dict[str, Any]] | None
 
     model_config = ConfigDict(extra="allow")
 

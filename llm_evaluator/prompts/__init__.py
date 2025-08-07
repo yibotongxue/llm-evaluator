@@ -1,3 +1,4 @@
+from .attack import *
 from .base import BasePromptBuilder
 from .capability import *
 from .judgment import *

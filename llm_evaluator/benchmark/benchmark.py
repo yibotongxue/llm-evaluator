@@ -3,6 +3,8 @@ from typing import Any
 from ..data.data_loader import BenchmarkDataLoader
 from ..inference import InferenceFactory
 from ..metrics import BaseMetricsComputer, get_metrics_computer
+from ..prompts import PromptBuilderRegistry
+from ..prompts.attack import AttackPromptBuilder
 from ..utils.type_utils import (
     EvalConfigs,
     EvaluateResult,
@@ -38,7 +40,6 @@ class Benchmark:
             缓存配置信息，可选
         """
         self.eval_cfgs = EvalConfigs(**eval_cfgs)
-        self.attack_cfgs = self.eval_cfgs.attack_cfgs
         self.model_cfgs = model_cfgs
         self.inference_cfgs = inference_cfgs
         self.model = InferenceFactory.get_inference_instance(
@@ -47,7 +48,27 @@ class Benchmark:
         data_loader = BenchmarkDataLoader(eval_cfgs=eval_cfgs)
         self.dataset = data_loader.load_dataset()
         self.data_formatter_dict = data_loader.data_formatter_dict
+        self.init_safety()
         self.init_metrics()
+
+    def init_safety(self) -> None:
+        self.attack_cfgs = self.eval_cfgs.attack_cfgs
+        self.benchmark_type = self.eval_cfgs.benchmark_type
+        if self.benchmark_type != "safety" and self.attack_cfgs is not None:
+            raise ValueError("不能在非安全评估中设置攻击配置")
+        self.prompt_builder_types: list[tuple[str, str | None]] = [("None", None)]
+        if self.benchmark_type == "safety":
+            if self.attack_cfgs is None:
+                self.attack_cfgs = []
+            for attack_cfg in self.attack_cfgs:
+                if attack_cfg["attack_type"] == "prompt_builder":
+                    prompt_builder_type = attack_cfg["prompt_builder_type"]
+                    PromptBuilderRegistry.verify_type(
+                        prompt_builder_type, AttackPromptBuilder  # type: ignore [type-abstract]
+                    )
+                    self.prompt_builder_types.append(
+                        (attack_cfg["attack_name"], prompt_builder_type)
+                    )
 
     def init_metrics(self) -> None:
         """
@@ -62,7 +83,9 @@ class Benchmark:
                 for metrics_cfg in benchmark_cfgs.metrics_cfgs
             ]
 
-    def inference(self) -> dict[tuple[str, str], list[list[InferenceOutput]]]:
+    def inference(
+        self,
+    ) -> dict[str, dict[tuple[str, str], list[list[InferenceOutput]]]]:
         """
         执行模型推理
 
@@ -73,21 +96,37 @@ class Benchmark:
         dict[tuple[str, str], list[InferenceOutput]]
             包含每个基准测试和指标名称对应的推理结果列表的字典
         """
-        inference_results: dict[tuple[str, str], list[list[InferenceOutput]]] = {}
-        for benchmark_name, inputs in self.dataset.items():
-            for metrics_computer in self.metrics[benchmark_name]:
-                outputs = self.model.generate(
-                    inputs,
-                    **metrics_computer.infer_settings(),
-                    enable_tqdm=True,
-                    tqdm_args={"desc": f"Generating outputs for {benchmark_name}"},
-                )
-                inference_results[(benchmark_name, metrics_computer.metrics_name)] = (
-                    outputs
-                )
+        inference_results: dict[
+            str, dict[tuple[str, str], list[list[InferenceOutput]]]
+        ] = {}
+        for attack_name, prompt_builder_type in self.prompt_builder_types:
+            inference_results[attack_name] = {}
+            for benchmark_name, inputs in self.dataset.items():
+                for metrics_computer in self.metrics[benchmark_name]:
+                    infer_settings = metrics_computer.infer_settings()
+                    if (
+                        infer_settings["prompt_template"] is not None
+                        and self.benchmark_type == "safety"
+                    ):
+                        raise ValueError(
+                            "安全评估的推理不能在度量计算设置提示词模板，必须在攻击配置中设置提示词模板"
+                        )
+                    if prompt_builder_type is not None:
+                        infer_settings["prompt_template"] = prompt_builder_type
+                    outputs = self.model.generate(
+                        inputs,
+                        **infer_settings,
+                        enable_tqdm=True,
+                        tqdm_args={
+                            "desc": f"Generating outputs for {benchmark_name} with {attack_name}"
+                        },
+                    )
+                    inference_results[attack_name][
+                        (benchmark_name, metrics_computer.metrics_name)
+                    ] = outputs
         return inference_results
 
-    def evaluate(self) -> dict[str, EvaluateResult]:
+    def evaluate(self) -> dict[str, dict[str, EvaluateResult]]:
         """
         执行评估过程
 
@@ -99,18 +138,22 @@ class Benchmark:
             包含各基准测试评估结果的字典
         """
         outputs = self.inference()
-        result: dict[str, EvaluateResult] = {}
-        for benchmark_name in self.dataset.keys():
-            metrics_result: list[MetricsOutput] = []
-            for metrics_computer in self.metrics[benchmark_name]:
-                output = outputs[(benchmark_name, metrics_computer.metrics_name)]
-                metrics_output = metrics_computer.compute_metrics(output)
-                metrics_result.append(metrics_output)
-            result[benchmark_name] = EvaluateResult(
-                metrics=metrics_result,
-                benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],
-                meta_data={},
-            )
+        result: dict[str, dict[str, EvaluateResult]] = {}
+        for attack_name in outputs.keys():
+            result[attack_name] = {}
+            for benchmark_name in self.dataset.keys():
+                metrics_result: list[MetricsOutput] = []
+                for metrics_computer in self.metrics[benchmark_name]:
+                    output = outputs[attack_name][
+                        (benchmark_name, metrics_computer.metrics_name)
+                    ]
+                    metrics_output = metrics_computer.compute_metrics(output)
+                    metrics_result.append(metrics_output)
+                result[attack_name][benchmark_name] = EvaluateResult(
+                    metrics=metrics_result,
+                    benchmark_cfgs=self.eval_cfgs.benchmarks[benchmark_name],
+                    meta_data={},
+                )
         return result
 
 

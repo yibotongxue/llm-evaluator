@@ -217,6 +217,7 @@ Options:
         )
 
 
+@DataFormatterRegistry.register("GPQA")
 class GPQACapabilityDataFormatter(BaseCapabilityDataFormatter):
     def __init__(self) -> None:
         self.rng = random.Random(x=42)  # nosec

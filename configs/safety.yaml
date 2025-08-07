@@ -130,4 +130,7 @@ eval_cfgs:
       metrics_cfgs:
         - *accuracy_metrics
 
-  attack_cfgs: []
+  attack_cfgs:
+    - attack_type: prompt_builder
+      attack_name: Base64Attack
+      prompt_builder_type: Base64Attack
