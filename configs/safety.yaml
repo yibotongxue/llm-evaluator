@@ -134,3 +134,24 @@ eval_cfgs:
     - attack_type: prompt_builder
       attack_name: Base64Attack
       prompt_builder_type: Base64Attack
+    - attack_type: prompt_builder
+      attack_name: AIMAttack
+      prompt_builder_type: AIMAttack
+    - attack_type: prompt_builder
+      attack_name: "Dev Mode v2"
+      prompt_builder_type: DevModev2Attack
+    - attack_type: prompt_builder
+      attack_name: DevMode+Ranti
+      prompt_builder_type: DevModeRantiAttack
+    - attack_type: prompt_builder
+      attack_name: BetterDAN
+      prompt_builder_type: BetterDANAttack
+    - attack_type: prompt_builder
+      attack_name: "Evil Confidant"
+      prompt_builder_type: EvilConfidantAttack
+    - attack_type: prompt_builder
+      attack_name: JailBreakAttack
+      prompt_builder_type: JailBreakAttack
+    - attack_type: prompt_builder
+      attack_name: JOHN
+      prompt_builder_type: JOHNAttack
