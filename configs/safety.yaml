@@ -1,6 +1,27 @@
 # 公共配置定义
 _common: &common_base
 
+  QwenPlus: &QwenPlus
+    model_cfgs:
+      inference_backend: api
+      model_sdk_type: openai
+      model_name_or_path: qwen-plus
+      api_key_name: QWEN_API_KEY
+    inference_cfgs:
+      max_tokens: 8192
+      max_retry: 3
+      max_workers: 8
+      sleep_seconds: 30
+    cache_cfgs:
+      cache_type: redis
+      json_dir: null
+      redis_cfgs:
+        host: localhost
+        port: 6379
+        db: 0
+        password: password
+      force_update: false
+
   # 公共judgment配置锚点
   judgment: &common_judgment
     judgment_type: LLM
@@ -56,9 +77,13 @@ inference_cfgs:
     stop: ["<|endoftext|>"]
 
 cache_cfgs:
-  cache_type: json_file
-  cache_dir: ./cache/inference
-  flush_threshold: 10
+  cache_type: redis
+  json_dir: null
+  redis_cfgs:
+    host: localhost
+    port: 6379
+    db: 0
+    password: password
   force_update: false
 
 eval_cfgs:
@@ -133,25 +158,38 @@ eval_cfgs:
   attack_cfgs:
     - attack_type: prompt_builder
       attack_name: Base64Attack
-      prompt_builder_type: Base64Attack
+      prompt_builder_cfgs: Base64Attack
     - attack_type: prompt_builder
       attack_name: AIMAttack
-      prompt_builder_type: AIMAttack
+      prompt_builder_cfgs: AIMAttack
     - attack_type: prompt_builder
       attack_name: "Dev Mode v2"
-      prompt_builder_type: DevModev2Attack
+      prompt_builder_cfgs: DevModev2Attack
     - attack_type: prompt_builder
       attack_name: DevMode+Ranti
-      prompt_builder_type: DevModeRantiAttack
+      prompt_builder_cfgs: DevModeRantiAttack
     - attack_type: prompt_builder
       attack_name: BetterDAN
-      prompt_builder_type: BetterDANAttack
+      prompt_builder_cfgs: BetterDANAttack
     - attack_type: prompt_builder
       attack_name: "Evil Confidant"
-      prompt_builder_type: EvilConfidantAttack
+      prompt_builder_cfgs: EvilConfidantAttack
     - attack_type: prompt_builder
       attack_name: JailBreakAttack
-      prompt_builder_type: JailBreakAttack
+      prompt_builder_cfgs: JailBreakAttack
     - attack_type: prompt_builder
       attack_name: JOHN
-      prompt_builder_type: JOHNAttack
+      prompt_builder_cfgs: JOHNAttack
+    - attack_type: prompt_builder
+      attack_name: AntiGPTv2Attack
+      prompt_builder_cfgs: AntiGPTv2Attack
+    - attack_type: prompt_builder
+      attack_name: DeepInceptionAttack
+      prompt_builder_cfgs:
+        <<: *QwenPlus
+        scene: "science fiction"
+        character_number: 5
+        layer_number: 5
+    - attack_type: prompt_builder
+      attack_name: PastTenseAttack
+      prompt_builder_cfgs: *QwenPlus

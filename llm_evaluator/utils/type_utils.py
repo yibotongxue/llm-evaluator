@@ -197,7 +197,7 @@ class EvalConfigs(CustomBaseModel):
 
 class InferSettings(TypedDict):
     repeat_cnt: int
-    prompt_template: str | None
+    prompt_template: str | dict[str, Any] | None
 
 
 def to_dict(obj: BaseModel | dict[str, Any]) -> dict[str, Any]:

@@ -24,7 +24,7 @@ class InferenceInterface(ABC):
         inputs: list[InferenceInput],
         *,
         repeat_cnt: int = 1,
-        prompt_template: str | None = None,
+        prompt_template: str | dict[str, Any] | None = None,
         enable_tqdm: bool = False,
         tqdm_args: dict[str, Any] | None = None,
     ) -> list[list[InferenceOutput]]:
@@ -50,8 +50,13 @@ class InferenceInterface(ABC):
             每个输入对应的推理结果列表，内层列表包含重复次数的结果
         """
         prompt_builder: BasePromptBuilder | None = None
-        if prompt_template is not None:
+        if isinstance(prompt_template, str):
             prompt_builder = PromptBuilderRegistry.get_by_name(prompt_template)()
+        if isinstance(prompt_template, dict):
+            prompt_builder_name = prompt_template.pop("name")
+            prompt_builder = PromptBuilderRegistry.get_by_name(prompt_builder_name)(
+                config=prompt_template
+            )
 
         if prompt_builder is not None:
             inputs = [

@@ -1,9 +1,13 @@
 from abc import ABC, abstractmethod
+from typing import Any
 
 from ..utils.type_utils import InferenceInput, InferenceOutput
 
 
 class BasePromptBuilder(ABC):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
+        self.config = config or {}
+
     @abstractmethod
     def process_input(self, raw_input: InferenceInput) -> InferenceInput:
         """

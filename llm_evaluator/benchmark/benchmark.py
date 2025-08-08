@@ -56,18 +56,39 @@ class Benchmark:
         self.benchmark_type = self.eval_cfgs.benchmark_type
         if self.benchmark_type != "safety" and self.attack_cfgs is not None:
             raise ValueError("不能在非安全评估中设置攻击配置")
-        self.prompt_builder_types: list[tuple[str, str | None]] = [("None", None)]
+        self.prompt_builder_types: list[tuple[str, str | dict[str, Any] | None]] = [
+            ("None", None)
+        ]
         if self.benchmark_type == "safety":
             if self.attack_cfgs is None:
                 self.attack_cfgs = []
             for attack_cfg in self.attack_cfgs:
                 if attack_cfg["attack_type"] == "prompt_builder":
-                    prompt_builder_type = attack_cfg["prompt_builder_type"]
+                    prompt_builder_cfgs = attack_cfg["prompt_builder_cfgs"]
+                    if isinstance(prompt_builder_cfgs, dict):
+                        if not "name" in prompt_builder_cfgs.keys():
+                            raise ValueError(
+                                "攻击配置中的提示词构建器参数中必须包含name"
+                            )
+                        prompt_builder_name = prompt_builder_cfgs["name"]
+                        if not isinstance(prompt_builder_name, str):
+                            raise ValueError(
+                                "攻击配置中的提示词构建器参数name必须为字符串"
+                            )
+                        for k in prompt_builder_cfgs.keys():
+                            if not isinstance(k, str):
+                                raise ValueError(
+                                    f"攻击配置中的提示词构建器参数名必须为字符串，得到一个{k}"
+                                )
+                    elif isinstance(prompt_builder_cfgs, str):
+                        prompt_builder_name = prompt_builder_cfgs
+                    else:
+                        raise TypeError(f"提示词配置必须为字符串或字典")
                     PromptBuilderRegistry.verify_type(
-                        prompt_builder_type, AttackPromptBuilder  # type: ignore [type-abstract]
+                        prompt_builder_name, AttackPromptBuilder  # type: ignore [type-abstract]
                     )
                     self.prompt_builder_types.append(
-                        (attack_cfg["attack_name"], prompt_builder_type)
+                        (attack_cfg["attack_name"], prompt_builder_cfgs)
                     )
 
     def init_metrics(self) -> None:
@@ -99,7 +120,7 @@ class Benchmark:
         inference_results: dict[
             str, dict[tuple[str, str], list[list[InferenceOutput]]]
         ] = {}
-        for attack_name, prompt_builder_type in self.prompt_builder_types:
+        for attack_name, prompt_builder_cfgs in self.prompt_builder_types:
             inference_results[attack_name] = {}
             for benchmark_name, inputs in self.dataset.items():
                 for metrics_computer in self.metrics[benchmark_name]:
@@ -111,8 +132,8 @@ class Benchmark:
                         raise ValueError(
                             "安全评估的推理不能在度量计算设置提示词模板，必须在攻击配置中设置提示词模板"
                         )
-                    if prompt_builder_type is not None:
-                        infer_settings["prompt_template"] = prompt_builder_type
+                    if prompt_builder_cfgs is not None:
+                        infer_settings["prompt_template"] = prompt_builder_cfgs
                     outputs = self.model.generate(
                         inputs,
                         **infer_settings,
