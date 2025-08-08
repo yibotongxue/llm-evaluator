@@ -63,7 +63,7 @@ class InferenceInterface(ABC):
                 InferenceInput(**deepcopy_config(input.model_dump()))
                 for input in inputs
             ]
-            inputs = [prompt_builder.process_input(input) for input in inputs]
+            inputs = prompt_builder.process_input_list(inputs)
         repeat_inputs: list[InferenceInput] = []
         for input in inputs:
             for repeat_idx in range(repeat_cnt):
@@ -72,7 +72,7 @@ class InferenceInterface(ABC):
             repeat_inputs, enable_tqdm=enable_tqdm, tqdm_args=tqdm_args
         )
         if prompt_builder is not None:
-            outputs = [prompt_builder.parse_output(output) for output in outputs]
+            outputs = prompt_builder.process_output_list(outputs)
         grouped_outputs = [
             outputs[i : i + repeat_cnt] for i in range(0, len(outputs), repeat_cnt)
         ]

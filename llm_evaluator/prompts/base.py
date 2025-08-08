@@ -8,6 +8,16 @@ class BasePromptBuilder(ABC):
     def __init__(self, config: dict[str, Any] | None = None) -> None:
         self.config = config or {}
 
+    def process_input_list(
+        self, raw_inputs: list[InferenceInput]
+    ) -> list[InferenceInput]:
+        return [self.process_input(raw_input) for raw_input in raw_inputs]
+
+    def process_output_list(
+        self, raw_outputs: list[InferenceOutput]
+    ) -> list[InferenceOutput]:
+        return [self.parse_output(raw_output) for raw_output in raw_outputs]
+
     @abstractmethod
     def process_input(self, raw_input: InferenceInput) -> InferenceInput:
         """
