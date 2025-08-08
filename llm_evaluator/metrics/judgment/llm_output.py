@@ -32,7 +32,10 @@ class LLMJudgment(BaseJudgment):
                 inference_cfgs=self.inference_cfgs,
                 cache_cfgs=self.cache_cfgs,
             )
-        inputs = [InferenceInput.from_output(output) for output in outputs]
+        inputs = [
+            InferenceInput.from_output(output, use_parsed_output=True)
+            for output in outputs
+        ]
         judgments = self.inference.generate(
             inputs=inputs,
             repeat_cnt=1,

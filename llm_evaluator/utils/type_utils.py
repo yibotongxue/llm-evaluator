@@ -46,7 +46,10 @@ class InferenceInput(CustomBaseModel):
 
     @classmethod
     def from_output(
-        cls, output: InferenceOutput, logger: Logger | None = None
+        cls,
+        output: InferenceOutput,
+        logger: Logger | None = None,
+        use_parsed_output: bool = False,
     ) -> InferenceInput:
         conversation = InferenceInput(**output.input).conversation.copy()
         if conversation[0]["role"] == "system":
@@ -58,13 +61,42 @@ class InferenceInput(CustomBaseModel):
                 f"The last turn of conversation is assistant.\nThe details is {conversation[-1]}. We will remove it"
             )
             conversation.pop()
-        conversation.append({"role": "assistant", "content": output.response})
+        if use_parsed_output and output.parsed_output is not None:
+            response = output.parsed_output
+        else:
+            response = output.response
+        conversation.append({"role": "assistant", "content": response})
         return InferenceInput(
             conversation=conversation,
             prefilled=False,
             system_prompt="",
             meta_data={},
         )
+
+    def get_last_user_message(self) -> str:
+        if len(self.conversation) == 0:
+            raise ValueError("The conversation is empty")
+        if self.prefilled and len(self.conversation) == 1:
+            raise ValueError("The conversation is prefilled, but only one turn")
+        if self.prefilled:
+            last_turn = self.conversation[-2]
+        else:
+            last_turn = self.conversation[-1]
+        if last_turn["role"] != "user":
+            raise ValueError("The last turn is not user")
+        return last_turn["content"]  # type: ignore [no-any-return]
+
+    def with_update_prompt(self, new_prompt: str) -> InferenceInput:
+        new_conversation = deepcopy(self.conversation)
+        if self.prefilled:
+            new_conversation[-2] = {"role": "user", "content": new_prompt}
+        else:
+            new_conversation[-1] = {"role": "user", "content": new_prompt}
+        raw = {
+            **self.model_dump(),
+            "conversation": new_conversation,
+        }
+        return InferenceInput(**raw)
 
     def get_raw_question(self) -> str:
         if "raw_question" in self.meta_data:
