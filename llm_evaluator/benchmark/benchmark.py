@@ -80,12 +80,10 @@ class Benchmark:
                                 raise ValueError(
                                     f"攻击配置中的提示词构建器参数名必须为字符串，得到一个{k}"
                                 )
-                    elif isinstance(prompt_builder_cfgs, str):
-                        prompt_builder_name = prompt_builder_cfgs
-                    else:
+                    elif not isinstance(prompt_builder_cfgs, str):
                         raise TypeError(f"提示词配置必须为字符串或字典")
                     PromptBuilderRegistry.verify_type(
-                        prompt_builder_name, AttackPromptBuilder  # type: ignore [type-abstract]
+                        prompt_builder_cfgs, AttackPromptBuilder  # type: ignore [type-abstract]
                     )
                     self.prompt_builder_types.append(
                         (attack_cfg["attack_name"], prompt_builder_cfgs)

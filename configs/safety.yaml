@@ -186,10 +186,13 @@ eval_cfgs:
     - attack_type: prompt_builder
       attack_name: DeepInceptionAttack
       prompt_builder_cfgs:
+        name: DeepInceptionAttack
         <<: *QwenPlus
         scene: "science fiction"
         character_number: 5
         layer_number: 5
     - attack_type: prompt_builder
       attack_name: PastTenseAttack
-      prompt_builder_cfgs: *QwenPlus
+      prompt_builder_cfgs:
+        name: PastTenseAttack
+        <<: *QwenPlus
