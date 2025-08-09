@@ -184,6 +184,12 @@ eval_cfgs:
       attack_name: AntiGPTv2Attack
       prompt_builder_cfgs: AntiGPTv2Attack
     - attack_type: prompt_builder
+      attack_name: CustomDraftAttack
+      prompt_builder_cfgs: CustomDraftAttack
+    - attack_type: prompt_builder
+      attack_name: IcaAttack
+      prompt_builder_cfgs: IcaAttack
+    - attack_type: prompt_builder
       attack_name: DeepInceptionAttack
       prompt_builder_cfgs:
         name: DeepInceptionAttack
