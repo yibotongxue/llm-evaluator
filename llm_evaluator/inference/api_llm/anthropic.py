@@ -66,7 +66,8 @@ class AnthropicApiLLMInference(BaseApiLLMInference):
                 self.logger.error(
                     msg=f"第{i+1}次呼叫{self.model_name} API失败，错误信息为{err}"
                 )
-                time.sleep(self.sleep_seconds)
+                if i < self.max_retry - 1:
+                    time.sleep(self.sleep_seconds)
                 continue
             content = response.content[0].text
             return InferenceOutput(
