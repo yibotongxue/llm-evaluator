@@ -178,6 +178,7 @@ class Benchmark:
 
 def main() -> None:
     import argparse
+    import os
 
     from ..utils.backup_utils import backup_project_files
     from ..utils.config import (
@@ -210,6 +211,10 @@ def main() -> None:
 
     save_json(cfgs, f"{output_dir}/cfgs.json")
 
+    project_root = os.path.dirname(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    )
+
     print(cfgs)
 
     benchmark = Benchmark(**cfgs)
@@ -219,7 +224,7 @@ def main() -> None:
     save_json(to_breif_dict(result), f"{output_dir}/brief_result.json")
 
     # 备份项目文件 (Added by Qwen Code)
-    backup_project_files(output_dir, args.config_file_path)
+    backup_project_files(output_dir, args.config_file_path, project_root)
 
 
 if __name__ == "__main__":

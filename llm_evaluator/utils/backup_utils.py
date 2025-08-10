@@ -7,7 +7,7 @@ import shutil
 def backup_project_files(
     output_dir: str,
     config_file_path: str,
-    project_root: str = "/home/linyibo/Code/llm-evaluator",
+    project_root: str,
 ) -> None:
     """
     备份项目文件到输出目录下的src目录中
