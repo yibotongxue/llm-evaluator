@@ -202,3 +202,33 @@ eval_cfgs:
       prompt_builder_cfgs:
         name: PastTenseAttack
         <<: *QwenPlus
+    - attack_type: prompt_builder
+      attack_name: PAPAttackEvidence
+      prompt_builder_cfgs:
+        name: PAPAttack
+        persuasive_type: "Evidence-based Persuasion"
+        <<: *QwenPlus
+    - attack_type: prompt_builder
+      attack_name: PAPAttackExpert
+      prompt_builder_cfgs:
+        name: PAPAttack
+        persuasive_type: "Expert Endorsement"
+        <<: *QwenPlus
+    - attack_type: prompt_builder
+      attack_name: PAPAttackMisrepresentation
+      prompt_builder_cfgs:
+        name: PAPAttack
+        persuasive_type: "Misrepresentation"
+        <<: *QwenPlus
+    - attack_type: prompt_builder
+      attack_name: PAPAttackAuthority
+      prompt_builder_cfgs:
+        name: PAPAttack
+        persuasive_type: "Authority endorsement"
+        <<: *QwenPlus
+    - attack_type: prompt_builder
+      attack_name: PAPAttackLogical
+      prompt_builder_cfgs:
+        name: PAPAttack
+        persuasive_type: "Logical appeal"
+        <<: *QwenPlus
