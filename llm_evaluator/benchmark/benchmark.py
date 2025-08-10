@@ -179,6 +179,7 @@ class Benchmark:
 def main() -> None:
     import argparse
 
+    from ..utils.backup_utils import backup_project_files
     from ..utils.config import (
         deepcopy_config,
         load_config,
@@ -203,7 +204,7 @@ def main() -> None:
 
     cfgs = deepcopy_config(cfgs)
 
-    cfgs.pop("_common")
+    cfgs.pop("_common", None)  # 使用pop的默认值None来避免KeyError (Fixed by Qwen Code)
 
     output_dir = cfgs["eval_cfgs"].pop("output_dir", "./output")
 
@@ -216,6 +217,9 @@ def main() -> None:
     result = benchmark.evaluate()
     save_json(to_dict(result), f"{output_dir}/full_result.json")
     save_json(to_breif_dict(result), f"{output_dir}/brief_result.json")
+
+    # 备份项目文件 (Added by Qwen Code)
+    backup_project_files(output_dir, args.config_file_path)
 
 
 if __name__ == "__main__":
