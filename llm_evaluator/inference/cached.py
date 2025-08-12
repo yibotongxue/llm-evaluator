@@ -58,19 +58,13 @@ class CachedInference(InferenceInterface):
         for i, input in enumerate(inputs):
             input_key = self._generate_key(input)
             cache = self.cache_manager.load_cache(input_key)
-            if cache is not None:
+            if (
+                cache is not None
+                and isinstance(cache, dict)
+                and "data" in cache
+                and isinstance(cache["data"], dict)
+            ):
                 cached_input_indices.append(i)
-                if "data" not in cache:
-                    cache = {
-                        "data": cache,
-                        "meta_data": {
-                            "time": time.time(),
-                            "later_inserted": True,
-                        },
-                    }
-                    self.logger.warning(
-                        f"缓存数据{input_key}: {cache}，缺少data字段，可能是此前的缓存数据，更新时间为当前时间"
-                    )
                 cached_result.append(InferenceOutput(**cache["data"]))
         self.logger.info(
             f"一共有{len(inputs)}条请求，从缓存读取了{len(cached_input_indices)}条"
