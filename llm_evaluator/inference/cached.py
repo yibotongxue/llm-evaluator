@@ -81,7 +81,6 @@ class CachedInference(InferenceInterface):
                 "data": output.model_dump(),
                 "meta_data": {
                     "time": time.time(),
-                    "later_inserted": False,
                 },
             }
             self.cache_manager.save_cache(key, to_save_output)
