@@ -136,9 +136,9 @@ class HuggingFaceInference(BaseInference):
                 input=batch[idx].model_dump(),
                 engine="hf",
                 meta_data={
-                    "output_id": output_ids[idx].tolist(),
-                    "tokenize_cfgs": tokenize_cfgs,
-                    "generate_cfgs": generate_cfgs,
+                    "raw_output": outputs,
+                    "model_cfgs": self.model_cfgs,
+                    "inference_cfgs": self.inference_cfgs,
                 },
             )
             for idx in range(len(batch))

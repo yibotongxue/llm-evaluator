@@ -1,4 +1,5 @@
 import gc
+from dataclasses import asdict
 from typing import Any
 
 import ray
@@ -119,8 +120,9 @@ class VllmInference(BaseInference):
                     input=inputs[i].model_dump(),
                     engine="vllm",
                     meta_data={
-                        "output_id": output.outputs[0].token_ids,
-                        "sampling_params": self.inference_cfgs,
+                        "raw_output": asdict(output.outputs[0]),
+                        "model_cfgs": self.model_cfgs,
+                        "inference_cfgs": self.inference_cfgs,
                     },
                 )
             )
@@ -137,7 +139,7 @@ class VllmInference(BaseInference):
             torch.cuda.synchronize()
             ray.shutdown()
         else:
-            self.logger.info(f"模型已经处于关闭状态，不需再行关闭")
+            self.logger.info(f"模型{self.model_name}已经处于关闭状态，不需再行关闭")
 
     def _get_inference_essential_cfgs(self) -> dict[str, Any]:
         model_cfgs = self.model_cfgs.copy()

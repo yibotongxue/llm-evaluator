@@ -26,6 +26,8 @@ class BaseApiLLMInference(BaseInference):
         self, model_cfgs: dict[str, Any], inference_cfgs: dict[str, Any]
     ) -> None:
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
+        self.safe_model_cfgs = model_cfgs.copy()
+        self.safe_model_cfgs.pop("api_key", None)
         self.max_retry: int = self.inference_cfgs.pop("max_retry", 3)
         self.max_workers: int = self.inference_cfgs.pop("max_workers", 32)
         self.sleep_seconds: int = self.inference_cfgs.pop("sleep_seconds", 30)
@@ -114,3 +116,16 @@ class BaseApiLLMInference(BaseInference):
         ----
         此方法必须由子类实现
         """
+
+    def _get_inference_essential_cfgs(self) -> dict[str, Any]:
+        model_cfgs = self.model_cfgs.copy()
+        model_cfgs.pop("api_key_name", None)
+        model_cfgs.pop("api_key", None)
+        inference_cfgs = self.inference_cfgs.copy()
+        inference_cfgs.pop("max_retry", None)
+        inference_cfgs.pop("max_workers", None)
+        inference_cfgs.pop("sleep_seconds", None)
+        return {
+            "model_cfgs": model_cfgs,
+            "inference_cfgs": inference_cfgs,
+        }

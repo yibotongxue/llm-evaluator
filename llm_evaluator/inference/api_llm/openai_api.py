@@ -39,7 +39,7 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
         super().__init__(model_cfgs=model_cfgs, inference_cfgs=inference_cfgs)
         self.logger = Logger(f"{self.__class__.__module__}.{self.__class__.__name__}")
         self.model_name = self.model_cfgs["model_name_or_path"]
-        api_key = self.model_cfgs.get("api_key")
+        api_key = self.model_cfgs["api_key"]
         base_url = self._BASE_URL_MAP.get(self.model_name, None)
         self.client = openai.OpenAI(api_key=api_key, base_url=base_url)
 
@@ -78,7 +78,11 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
                 response=content,
                 input=inference_input.model_dump(),
                 engine="api",
-                meta_data=response.model_dump(),
+                meta_data={
+                    "raw_output": response.model_dump(),
+                    "model_cfgs": self.safe_model_cfgs,
+                    "inference_cfgs": self.inference_cfgs,
+                },
             )
         self.logger.error(
             msg=f"所有对{self.model_name} API的呼叫均以失败，返回默认信息"
@@ -87,7 +91,11 @@ class OpenAIApiLLMInference(BaseApiLLMInference):
             response="",
             input=inference_input.model_dump(),
             engine="api",
-            meta_data={},
+            meta_data={
+                "error": "All API calls failed",
+                "model_cfgs": self.safe_model_cfgs,
+                "inference_cfgs": self.inference_cfgs,
+            },
         )
 
     @classmethod
