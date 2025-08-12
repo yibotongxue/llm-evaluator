@@ -44,8 +44,6 @@ class HuggingFaceInference(BaseInference):
         )
         self.logger.info(f"分词器{self.model_name}已加载")
         self.accelerator: Accelerator | None = None
-        self.tokenizer.pad_token = self.tokenizer.eos_token
-        self.offset = model_cfgs.get("offset", 5)
         self.inference_batch_size = inference_cfgs.get("inference_batch_size", 32)
 
     def _generate(
@@ -101,33 +99,21 @@ class HuggingFaceInference(BaseInference):
                 0, {"role": "system", "content": input.system_prompt}
             )
         messages = [input.conversation for input in batch]
-        encoded_inputs = self.tokenizer.apply_chat_template(
+        prompts = self.tokenizer.apply_chat_template(
             conversation=messages,
             add_generation_prompt=True,
-            return_tensors="pt",
-            return_dict=True,
+            tokenize=False,
+        )
+        for i, prompt in enumerate(prompts):
+            if batch[i].prefilled:
+                last_eos_token_idx = prompt.rfind(self.tokenizer.eos_token)
+                prompts[i] = prompt[:last_eos_token_idx]
+        encoded_inputs = self.tokenizer(
+            prompts,
             padding=True,
+            return_tensors="pt",
             **tokenize_cfgs,
         )
-        pad_id = self.tokenizer.pad_token_id
-        for i in range(len(messages)):
-            if batch[i].prefilled:
-                if not messages[i][-1]["role"] == "assistant":
-                    raise ValueError(
-                        f"使用预填充的时候，最后一轮对话必须是assistant，但当前是{messages[i][-1]["role"]}"
-                    )
-                encoded_inputs["input_ids"][i] = torch.cat(
-                    [
-                        torch.full((self.offset,), pad_id),
-                        encoded_inputs["input_ids"][i][: -self.offset],
-                    ]
-                )
-                encoded_inputs["attention_mask"][i] = torch.cat(
-                    [
-                        torch.full((self.offset,), 0),
-                        encoded_inputs["attention_mask"][i][: -self.offset],
-                    ]
-                )
         with torch.inference_mode():
             outputs = self.model.generate(  # type: ignore [union-attr]
                 input_ids=encoded_inputs["input_ids"].to(self.accelerator.device),  # type: ignore [union-attr]
@@ -169,7 +155,7 @@ class HuggingFaceInference(BaseInference):
             torch.cuda.synchronize()
             ray.shutdown()
         else:
-            self.logger.info(f"模型已经处于关闭状态，不需再行关闭")
+            self.logger.info(f"模型{self.model_name}已经处于关闭状态，不需再行关闭")
 
 
 def main() -> None:

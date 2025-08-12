@@ -36,10 +36,8 @@ class VllmInference(BaseInference):
         self.model_name = model_cfgs["model_name_or_path"]
         self.vllm_init_args = model_cfgs.get("vllm_init_args", {})
 
-        self.logger.info(f"Initializing vLLM model: {self.model_name}")
         self.llm: LLM | None = None
         self.tokenizer: AnyTokenizer | None = None
-        self.logger.info(f"vLLM model {self.model_name} loaded successfully")
 
         self.sampling_params = SamplingParams(
             **inference_cfgs.get("sampling_params", {})
@@ -61,20 +59,12 @@ class VllmInference(BaseInference):
             格式化后的提示字符串列表
         """
         if self.llm is None:
+            self.logger.info(f"Initializing vLLM model: {self.model_name}")
             self.llm = LLM(model=self.model_name, **self.vllm_init_args)
             self.tokenizer = self.llm.get_tokenizer()
+            self.logger.info(f"vLLM model {self.model_name} loaded successfully")
         prompts = []
         for input in inputs:
-
-            if input.prefilled:
-                # TODO 需要设计更好的预填充方案
-                last_messages = input.conversation.pop(-1)
-                if not last_messages["role"] == "assistant":
-                    raise ValueError(
-                        f"使用预填充的时候，最后一轮对话必须是assistant，但当前是{last_messages["role"]}"
-                    )
-                input.conversation[-1]["content"] += last_messages["content"]
-
             # 插入系统提示
             conversation = input.conversation.copy()
             if not input.system_prompt == "":
@@ -86,6 +76,12 @@ class VllmInference(BaseInference):
             prompt = self.tokenizer.apply_chat_template(  # type: ignore [union-attr]
                 conversation=conversation, add_generation_prompt=True, tokenize=False
             )
+
+            # 处理预填充
+            if input.prefilled:
+                last_eos_token_idx = prompt.rfind(self.tokenizer.eos_token)  # type: ignore [union-attr]
+                prompt = prompt[:last_eos_token_idx]
+
             prompts.append(prompt)
         return prompts
 
@@ -98,8 +94,10 @@ class VllmInference(BaseInference):
         if len(inputs) == 0:
             return []
         if self.llm is None:
+            self.logger.info(f"Initializing vLLM model: {self.model_name}")
             self.llm = LLM(model=self.model_name, **self.vllm_init_args)
             self.tokenizer = self.llm.get_tokenizer()
+            self.logger.info(f"vLLM model {self.model_name} loaded successfully")
 
         results: list[InferenceOutput] = []
 
