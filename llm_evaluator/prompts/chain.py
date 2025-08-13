@@ -7,21 +7,13 @@ from .registry import PromptBuilderRegistry
 
 @PromptBuilderRegistry.register("chain")
 class ChainPromptBuilder(BasePromptBuilder):
-    _prompt_builder_type: type[BasePromptBuilder] = BasePromptBuilder  # type: ignore [type-abstract]
-
     def __init__(self, config: dict[str, Any]) -> None:
         super().__init__(config)
         prompt_cfg_list = config["prompt_cfg_list"]
-        self.prompt_builder_list: list[BasePromptBuilder] = []
-        for prompt_cfg in prompt_cfg_list:
-            prompt_builder = PromptBuilderRegistry.get_by_name(prompt_cfg["type"])(
-                prompt_cfg["config"]
-            )
-            if not isinstance(prompt_builder, self._prompt_builder_type):
-                raise TypeError(
-                    f"prompt_builder must be of type {self._prompt_builder_type}, but got {type(prompt_builder).__name__}"
-                )
-            self.prompt_builder_list.append(prompt_builder)
+        self.prompt_builder_list: list[BasePromptBuilder] = [
+            PromptBuilderRegistry.get_by_name(prompt_cfg["type"])(prompt_cfg["config"])
+            for prompt_cfg in prompt_cfg_list
+        ]
 
     def process_input_list(
         self, raw_inputs: list[InferenceInput]
