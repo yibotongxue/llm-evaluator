@@ -1,6 +1,5 @@
 from .base import AttackPromptBuilder
-
-# from .llm import *
+from .chain import *
 from .template import *
 
 __all__ = ["AttackPromptBuilder"]

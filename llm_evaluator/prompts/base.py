@@ -13,7 +13,7 @@ class BasePromptBuilder(ABC):
     ) -> list[InferenceInput]:
         return [self.process_input(raw_input) for raw_input in raw_inputs]
 
-    def process_output_list(
+    def parse_output_list(
         self, raw_outputs: list[InferenceOutput]
     ) -> list[InferenceOutput]:
         return [self.parse_output(raw_output) for raw_output in raw_outputs]

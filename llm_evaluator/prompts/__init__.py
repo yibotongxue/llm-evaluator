@@ -1,6 +1,7 @@
 from .attack import *
 from .base import BasePromptBuilder
 from .capability import *
+from .chain import *
 from .judgment import *
 from .matcher import *
 from .registry import PromptBuilderRegistry
