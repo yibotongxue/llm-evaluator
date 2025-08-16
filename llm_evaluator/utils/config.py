@@ -27,12 +27,31 @@ def load_config(config_path: str) -> dict[str, Any]:
 def update_dict(
     total_dict: dict[str, Any], item_dict: dict[str, Any]
 ) -> dict[str, Any]:
+
+    def _is_list_dict(obj: Any) -> bool:
+        return isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], dict)
+
+    def _update_dict_from_top(
+        total_dict: dict[str, Any], item_dict: dict[str, Any]
+    ) -> dict[str, Any]:
+        for key in total_dict.keys():
+            if key in item_dict:
+                if isinstance(item_dict[key], dict) and isinstance(
+                    total_dict[key], dict
+                ):
+                    _update_dict_from_top(total_dict[key], item_dict[key])
+                elif isinstance(item_dict[key], list) and _is_list_dict(
+                    total_dict[key]
+                ):
+                    for element in total_dict[key]:
+                        _update_dict(element, item_dict[key])
+                else:
+                    total_dict[key] = item_dict[key]
+        return total_dict
+
     def _update_dict(
         total_dict: dict[str, Any], item_dict: dict[str, Any]
     ) -> dict[str, Any]:
-
-        def _is_list_dict(obj: Any) -> bool:
-            return isinstance(obj, list) and len(obj) > 0 and isinstance(obj[0], dict)
 
         for key, value in total_dict.items():
             if key in item_dict:
@@ -53,6 +72,11 @@ def update_dict(
                 for element in value:
                     _update_dict(element, item_dict)
         return total_dict
+
+    if "" in item_dict:
+        item_dict_from_top = item_dict.pop("")
+        if isinstance(item_dict_from_top, dict):
+            total_dict = _update_dict_from_top(total_dict, item_dict_from_top)
 
     return _update_dict(total_dict, item_dict)
 

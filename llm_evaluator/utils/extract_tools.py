@@ -24,6 +24,10 @@ def extract_last_tag_content(s: str, tag_name: str) -> str | None:
     :return: 最后一个标签内容（未找到返回 None）
     """
     # 构建正则表达式（考虑标签属性、换行符等）
-    pattern = rf"<{tag_name}[^>]*>(.*?)</{tag_name}>"
+    pattern = rf"<{tag_name}>(.*?)</{tag_name}>"
     matches = re.findall(pattern, s, re.DOTALL)
-    return matches[-1] if matches else None
+    return (
+        matches[-1].split(f"<{tag_name}>")[-1].split(f"</{tag_name}>")[0]
+        if matches
+        else None
+    )
