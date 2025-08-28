@@ -168,6 +168,13 @@ class InferenceOutput(CustomBaseModel):
         return InferenceOutput(**raw)
 
 
+class AlpacaData(CustomBaseModel):
+    instruction: str
+    input: str
+    output: str
+    meta_data: dict[str, Any] = {}
+
+
 class MetricsOutput(CustomBaseModel):
     metrics_name: str
     metrics: float

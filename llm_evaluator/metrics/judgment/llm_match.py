@@ -144,7 +144,7 @@ class LLMMatchJudgment(BaseJudgment):
                     )
                 )
             else:
-                parsed_output = judgments[judgment_idx][0].parsed_output
+                parsed_output = judgments[judgment_idx][0].parsed_output or False
                 if not isinstance(parsed_output, bool):
                     raise ValueError(
                         f"Parsed output of judgment must be bool, but got {parsed_output}."

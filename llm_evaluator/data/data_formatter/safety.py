@@ -185,3 +185,30 @@ class WildJailbreakDataFormatter(BaseSafetyDataFormatter):
                 "task": "wildjailbreak",
             }
         )
+
+
+@DataFormatterRegistry.register("Alpaca")
+class AlpacaDataFormatter(BaseSafetyDataFormatter):
+    """
+    Alpaca安全性评估数据格式化器。
+
+    用于处理Alpaca数据集的格式化。
+    """
+
+    def format_conversation(self, raw_sample: dict[str, Any]) -> InferenceInput:
+        """
+        格式化Alpaca对话数据。
+
+        参数
+        ----------
+        raw_sample : dict[str, Any]
+            原始样本数据
+
+        返回
+        -------
+        InferenceInput
+            格式化后的推理输入
+        """
+        return InferenceInput.from_prompts(raw_sample["instruction"]).with_meta_data(
+            raw_sample
+        )
